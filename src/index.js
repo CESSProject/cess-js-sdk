@@ -1,8 +1,11 @@
-const ControlApi = require("./api/file-storage");
-const controlApi = new ControlApi();
+const FileStorage = require("./api/file-storage");
+const Keyring = require("./keyring");
 
-module.exports = controlApi;
-//findPrice
+module.exports = {
+  FileStorage,
+  Keyring,
+};
+// findPrice
 // findPurchasedSpace,
 // findFile,
 // fileUpload,
