@@ -1,0 +1,19 @@
+{
+  "name": "cess-js-sdk",
+  "version": "1.0.1",
+  "description": "js-sdk for Cess Project file storage",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CESSProject/cess-js-sdk.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@polkadot/api": "^8.2.1"
+  }
+}
