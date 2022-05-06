@@ -29,7 +29,7 @@ const config={
   keyringOption: { type: "sr25519", ss58Format: 42 },
 }
 const cess =new Cess(config);
-const accountId='my (wallet address';
+const accountId='my wallet address';
 
 //Find curr price
 api.findPrice().then(console.log,console.log);

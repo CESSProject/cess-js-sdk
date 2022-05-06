@@ -4,12 +4,12 @@ module.exports = class ControlApi extends ControlBase {
   constructor(config) {
     super(config);
   }
-  async getGublicKeyFromMnemonic(mnemonic) {
+  async getPublicKeyFromMnemonic(mnemonic) {
     await this.api.isReady;
     const pair = this.keyring.createFromUri(mnemonic);
     return "0x" + this.toHexString(pair.publicKey);
   }
-  async getGublicKeyFromAccountId(accountId) {
+  async getPublicKeyFromAccountId(accountId) {
     await this.api.isReady;
     const pair = this.keyring.addFromAddress(accountId);
     return "0x" + this.toHexString(pair.publicKey);
