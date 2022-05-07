@@ -117,15 +117,17 @@ module.exports = class ControlApi extends ControlBase {
         const pair = this.keyring.createFromUri(mnemonic);
         let fileid = short.generate();
         const extrinsic = this.api.tx.fileBank.upload(
-          pair.address,
-          fileid,
+          pair.address,          
           filename,
+          fileid,
           filehash,
           ispublic,
           backups,
           filesize,
           downloadfee
         );
+        console.log('fileid:',fileid)
+        console.log('filehash:',filehash)
         const extrinsicHash = extrinsic.hash.toHex();
 
         // const signerAccount = this.keyring.getPair(accountId);

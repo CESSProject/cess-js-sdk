@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+message uploadBody {
+  string  file_id = 1;
+  string  file_hash = 2;
+  string  backups = 3;
+  int32   blocks = 4;
+  int32   block_size=5;
+  int32   block_num=6;
+  bytes   data=7;
+}
+
+message ReqMsgUpload {
+    int32   version = 1;
+    uint64  id = 2;
+    string  method = 3;
+    string  service = 4;
+    uploadBody   body = 5;
+}
+
+
+message ReqMsgDownload {
+    int32   version = 1;
+    uint64  id = 2;
+    string  method = 3;
+    string  service = 4;
+    downloadBody   body = 5;
+}
+message downloadBody{
+  string  file_id=1;
+  string  walletAddress=2;
+  int32   blocks=3;
+}
+
+
+message ResDownloadBody {
+  string  file_id=1;
+  int32   blocks=2;
+  int32   block_size=3;
+  int32   block_num=4;
+  bytes   data=5;
+}
+
+message RespMsg {
+    uint64  id = 1;
+    RespBody   body = 2;
+}
+
+message RespBody {
+    int32   code = 1;
+    string  msg = 2;
+    ResDownloadBody   data = 3;
+}
