@@ -8,16 +8,16 @@ module.exports = class ControlApi extends ControlBase {
   async timestamp() {
     await this.api.isReady;
     const result = await this.api.query.timestamp.now();
-    return result.toJSON();
+    return result.toHuman();
   }
   //Find curr price
   async findPrice() {
     try {
       await this.api.isReady;
       let result = await this.api.query.sminer.purchasedSpace();
-      const purchased = parseFloat(result.toJSON());
+      const purchased = parseFloat(result.toHuman());
       result = await this.api.query.sminer.availableSpace();
-      const available = parseFloat(result.toJSON());
+      const available = parseFloat(result.toHuman());
       const price = (1024 / parseFloat(available - purchased)) * 1000; //CESS/MB
       return price;
     } catch (e) {
@@ -35,7 +35,7 @@ module.exports = class ControlApi extends ControlBase {
       let result = await this.api.query.fileBank.userHoldSpaceDetails(
         accountId
       );
-      return result.toJSON();
+      return result.toHuman();
     } catch (e) {
       console.error(e);
       return e;
@@ -49,7 +49,7 @@ module.exports = class ControlApi extends ControlBase {
       }
       await this.api.isReady;
       let result = await this.api.query.fileBank.file(fileId);
-      return result.toJSON();
+      return result.toHuman();
     } catch (e) {
       console.error(e);
       return e;
@@ -63,7 +63,7 @@ module.exports = class ControlApi extends ControlBase {
       }
       await this.api.isReady;
       let result = await this.api.query.fileBank.userHoldFileList(accountId);
-      return result.toJSON();
+      return result.toHuman();
     } catch (e) {
       console.error(e);
       return e;
@@ -101,7 +101,7 @@ module.exports = class ControlApi extends ControlBase {
         // 选择调度中一个能建立链接的调度——>文件分块块大小自拟，分块通过ws+grpc发送给调度——
         // >得到调度回复收到继续发送下一块(Code=0为正常，其他为异常)——>发送结束句柄关闭
         let result = await this.api.query.fileMap.schedulerMap();
-        console.log(result.toJSON());
+        console.log(result.toHuman());
         for (let r of result) {
           console.log("ws://" + this.uint8ArrayToIP(r.ip));
         }
@@ -168,6 +168,10 @@ module.exports = class ControlApi extends ControlBase {
         return e;
       }
     });
+  }
+
+  async fileDownload(){
+    
   }
   //buy storage
   async expansion(mnemonic, spaceCount, leaseCount, maxPrice) {    
