@@ -20,7 +20,7 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
   return new Promise(async (resolve, reject) => {
     const buffInfoArray = fileSlice.getSliceInfoArr(sourFilePath, 2097152); // max length 2MB  = 2097152
     const totleSize = buffInfoArray[buffInfoArray.length - 1].end;
-    // console.log(buffInfoArray);
+    console.log(buffInfoArray);
     let i = 0;
     await wsproto.init(
       wsUrl,
@@ -69,7 +69,7 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
         return reject(err);
       }
     }
-    console.error("upload complete!");
+    console.log("upload complete!");
     resolve();
   });
 }

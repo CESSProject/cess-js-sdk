@@ -1,6 +1,7 @@
 const ControlBase = require("../control-base");
 const bs58 = require("bs58");
 const fs = require("fs");
+const path = require("path");
 const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
 const { getFileInfo, upload, download } = require("../file-process");
@@ -60,7 +61,7 @@ module.exports = class ControlApi extends ControlBase {
     }
   }
   //Find my hold file list by accountId
-  async userHoldFileList(accountId) {
+  async findFileList(accountId) {
     try {
       if (!accountId) {
         throw "accountId is null";
@@ -98,8 +99,9 @@ module.exports = class ControlApi extends ControlBase {
         } catch (e) {}
       }
       if (ips.length == 0) {
-        return reject("scheduler is not found");
+        return reject("ip list is null");
       }
+      console.log('ips',ips);
       if (onlyone) {
         return resolve(ips[0]);
       }
@@ -109,7 +111,6 @@ module.exports = class ControlApi extends ControlBase {
   async fileUpload(
     mnemonic,
     filePath,
-    ispublic,
     privatekey,
     backups,
     downloadfee
@@ -122,6 +123,7 @@ module.exports = class ControlApi extends ControlBase {
         if (!filePath) {
           throw "filePath is null";
         }
+        let ispublic=privatekey?true:false;
         if (!ispublic && privatekey) {
           await new FileCrypt(privatekey).encrypt(
             filePath,
@@ -131,7 +133,7 @@ module.exports = class ControlApi extends ControlBase {
         }
         const { filehash, filename, filesize } = getFileInfo(filePath);
         await this.api.isReady;
-        const wsURL = await findSchedulerIPs(1);
+        const wsURL = await this.findSchedulerIPs(1);
         const pair = this.keyring.createFromUri(mnemonic);
         const fileid = short.generate();
         const extrinsic = this.api.tx.fileBank.upload(
@@ -158,10 +160,11 @@ module.exports = class ControlApi extends ControlBase {
             if (!result.dispatchInfo) {
               return "Cannot get `dispatchInfo` from the result.";
             }
-            console.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+            console.log(" extrinsic status:",result.status.isFinalized,",hash:", extrinsicHash);
             unsub();
+            // return;
             //upload to sminer
-            upload(filePath, fileid, fileHash, wsURL, true).then(
+            upload(filePath, fileid, filehash, wsURL, true).then(
               resolve,
               reject
             );
@@ -181,17 +184,13 @@ module.exports = class ControlApi extends ControlBase {
           }
         });
       } catch (e) {
+        console.error("have error and break");
         console.error(e);
         reject(e);
       }
     });
   }
-  async fileDownload(
-    mnemonic,
-    fileId,
-    fileSavePath,
-    privatekey
-  ) {
+  async fileDownload(mnemonic, fileId, fileSaveDir, privatekey) {
     return new Promise(async (resolve, reject) => {
       try {
         if (!mnemonic) {
@@ -200,19 +199,23 @@ module.exports = class ControlApi extends ControlBase {
         if (!fileId) {
           throw "fileId is null";
         }
+        if (!fileSaveDir) {
+          throw "fileSaveDir is null";
+        }
         const fileInfo = await this.findFile(fileId);
         console.log(fileInfo);
-        if(!fileInfo.FileState||fileInfo.FileState!='active'){
-          throw 'The file has not been backed up';
+        if (!fileInfo.fileState || fileInfo.fileState != "active") {
+          throw "The file has not been backed up";
         }
-        const wsURL = await findSchedulerIPs(1);
+        const fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
+        const wsURL = await this.findSchedulerIPs(1);
         console.log(wsURL);
-        const result = await download(fileSavePath, fileId, fileInfo.fileHash, wsURL);
-        if (!fileInfo.ispublic && privatekey) {
-          fs.renameSync(fileSavePath,fileSavePath+'.crypt');
+        await download(fileSavePath, fileId, fileInfo.fileHash, wsURL);
+        if (!fileInfo.public && privatekey) {
+          fs.renameSync(fileSavePath, fileSavePath + ".crypt");
           await new FileCrypt(privatekey).decrypt(
             fileSavePath + ".crypt",
-            fileSavePath            
+            fileSavePath
           );
         }
         resolve(fileSavePath);
