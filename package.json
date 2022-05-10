@@ -16,8 +16,10 @@
   "dependencies": {
     "@polkadot/api": "^8.2.1",
     "bs58": "^5.0.0",
+    "file-aes-crypt": "^1.0.3",
     "fs-slicer": "^1.0.3",
     "md5-file": "^5.0.0",
+    "progress": "^2.0.3",
     "protobufjs": "^6.11.2",
     "short-uuid": "^4.2.0",
     "ws": "^8.6.0"

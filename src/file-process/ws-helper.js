@@ -8,14 +8,14 @@ module.exports = class WS {
     this.url=url;
   }
   cb = (data) => {
-    console.log("ws reseid mesage", data);
+    // console.log("ws reseid mesage", data);
   };
   open() {
     const that=this;
     return new Promise((resole, reject) => {
       const ws = new WebSocket(that.url);     
       ws.on("open", () => {
-        console.log("ws is open ", that.url);
+        // console.log("ws is open ", that.url);
         that.wsIsOpen = true;
         resole();
       });
@@ -43,12 +43,12 @@ module.exports = class WS {
         return reject("WebSocket is closed ");
       }
       that.cb = (data) => {
-        console.log("ws res mesage", data);
+        // console.log("ws res mesage", data);
         resole(data);
       };
-      console.log("sending ...");
+      // console.log("sending ...");
       that.ws.send(msg);
-      console.log("send end");
+      // console.log("send end");
     });
   }
 };

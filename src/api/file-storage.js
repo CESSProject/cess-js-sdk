@@ -1,6 +1,10 @@
 const ControlBase = require("../control-base");
 const bs58 = require("bs58");
+const fs = require("fs");
 const short = require("short-uuid");
+const FileCrypt = require("file-aes-crypt");
+const { getFileInfo, upload, download } = require("../file-process");
+
 module.exports = class ControlApi extends ControlBase {
   constructor(config) {
     super(config);
@@ -79,13 +83,35 @@ module.exports = class ControlApi extends ControlBase {
   uint8ArrayToIP(u8arr) {
     return this.uint8ArrayToString(bs58.decode(this.uint8ArrayToString(u8arr)));
   }
+  async findSchedulerIPs(onlyone) {
+    return new Promise(async (resolve, reject) => {
+      const result = await this.api.query.fileMap.schedulerMap();
+      // console.log(result.toHuman());
+      if (result.length == 0) {
+        return reject("scheduler is not found");
+      }
+      const ips = [];
+      for (let r of result) {
+        try {
+          const ip = this.uint8ArrayToIP(r.ip);
+          ips.push("ws://" + ip);
+        } catch (e) {}
+      }
+      if (ips.length == 0) {
+        return reject("scheduler is not found");
+      }
+      if (onlyone) {
+        return resolve(ips[0]);
+      }
+      resolve(ips);
+    });
+  }
   async fileUpload(
     mnemonic,
-    filename,
-    filehash,
+    filePath,
     ispublic,
+    privatekey,
     backups,
-    filesize,
     downloadfee
   ) {
     return new Promise(async (resolve, reject) => {
@@ -93,31 +119,23 @@ module.exports = class ControlApi extends ControlBase {
         if (!mnemonic) {
           throw "mnemonic is null";
         }
-        if (!filename) {
-          throw "filename is null";
+        if (!filePath) {
+          throw "filePath is null";
         }
+        if (!ispublic && privatekey) {
+          await new FileCrypt(privatekey).encrypt(
+            filePath,
+            filePath + ".crypt"
+          );
+          filePath += ".crypt";
+        }
+        const { filehash, filename, filesize } = getFileInfo(filePath);
         await this.api.isReady;
-        // 查询调度信息——>获得所有调度IP:port组合——>上传文件元数据信息——>
-        // 选择调度中一个能建立链接的调度——>文件分块块大小自拟，分块通过ws+grpc发送给调度——
-        // >得到调度回复收到继续发送下一块(Code=0为正常，其他为异常)——>发送结束句柄关闭
-        let result = await this.api.query.fileMap.schedulerMap();
-        console.log(result.toHuman());
-        for (let r of result) {
-          console.log("ws://" + this.uint8ArrayToIP(r.ip));
-        }
-        // return;
-        let ip = this.uint8ArrayToIP(result[result.length - 1].ip);
-        let wsURL = "ws://" + ip;
-        console.log("wsURL", wsURL);
-        // let o={
-        //   fileid、filename、filehash、ispublic、backups、filesize、fee
-        // };
-        // result = await this.api.tx.fileBank.upload(address, filename, fileid, filehash, public, backups, filesize, downloadfee);
-        // let address=accountId,
+        const wsURL = await findSchedulerIPs(1);
         const pair = this.keyring.createFromUri(mnemonic);
-        let fileid = short.generate();
+        const fileid = short.generate();
         const extrinsic = this.api.tx.fileBank.upload(
-          pair.address,          
+          pair.address,
           filename,
           fileid,
           filehash,
@@ -126,8 +144,8 @@ module.exports = class ControlApi extends ControlBase {
           filesize,
           downloadfee
         );
-        console.log('fileid:',fileid)
-        console.log('filehash:',filehash)
+        console.log("fileid:", fileid);
+        console.log("filehash:", filehash);
         const extrinsicHash = extrinsic.hash.toHex();
 
         // const signerAccount = this.keyring.getPair(accountId);
@@ -142,39 +160,70 @@ module.exports = class ControlApi extends ControlBase {
             }
             console.log("extrinsic suceess extrinsicHash:", extrinsicHash);
             unsub();
+            //upload to sminer
+            upload(filePath, fileid, fileHash, wsURL, true).then(
+              resolve,
+              reject
+            );
             // return extrinsicHash;
           } else if (result.status.isDropped) {
             unsub();
-            return "isDropped";
+            return reject("isDropped");
           } else if (result.status.isFinalityTimeout) {
             unsub();
-            return `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`;
+            return reject(
+              `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
+            );
           } else if (result.isError) {
             unsub();
-            console.log("error", result.isError);
-          } else {
-            console.log(result.toHuman());
+            console.error("error", result.isError);
+            return reject(result.isError);
           }
         });
-
-        // let result3 = result.toHuman();
-        // console.log(result3);
-        // console.log(typeof result[1].ip);
-        // let ip = parseInt(result[1].ip, 16);
-        // let wsURL = "ws://" + this.numToIp(ip);
-        // return wsURL;
       } catch (e) {
         console.error(e);
-        return e;
+        reject(e);
       }
     });
   }
-
-  async fileDownload(){
-    
+  async fileDownload(
+    mnemonic,
+    fileId,
+    fileSavePath,
+    privatekey
+  ) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!mnemonic) {
+          throw "mnemonic is null";
+        }
+        if (!fileId) {
+          throw "fileId is null";
+        }
+        const fileInfo = await this.findFile(fileId);
+        console.log(fileInfo);
+        if(!fileInfo.FileState||fileInfo.FileState!='active'){
+          throw 'The file has not been backed up';
+        }
+        const wsURL = await findSchedulerIPs(1);
+        console.log(wsURL);
+        const result = await download(fileSavePath, fileId, fileInfo.fileHash, wsURL);
+        if (!fileInfo.ispublic && privatekey) {
+          fs.renameSync(fileSavePath,fileSavePath+'.crypt');
+          await new FileCrypt(privatekey).decrypt(
+            fileSavePath + ".crypt",
+            fileSavePath            
+          );
+        }
+        resolve(fileSavePath);
+      } catch (e) {
+        console.error(e);
+        reject(e);
+      }
+    });
   }
   //buy storage
-  async expansion(mnemonic, spaceCount, leaseCount, maxPrice) {    
+  async expansion(mnemonic, spaceCount, leaseCount, maxPrice) {
     return new Promise(async (resolve, reject) => {
       try {
         await this.api.isReady;
@@ -199,7 +248,9 @@ module.exports = class ControlApi extends ControlBase {
             reject("isDropped");
           } else if (result.status.isFinalityTimeout) {
             unsub();
-            reject(`Finality timeout at block hash '${result.status.asFinalityTimeout}'.`);
+            reject(
+              `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
+            );
           } else if (result.isError) {
             unsub();
             reject(result.toHuman());
@@ -234,7 +285,9 @@ module.exports = class ControlApi extends ControlBase {
             reject("isDropped");
           } else if (result.status.isFinalityTimeout) {
             unsub();
-            reject(`Finality timeout at block hash '${result.status.asFinalityTimeout}'.`);
+            reject(
+              `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
+            );
           } else if (result.isError) {
             unsub();
             reject(result.toHuman());

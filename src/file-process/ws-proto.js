@@ -18,13 +18,13 @@ module.exports = class WsProto {
     });
   }
   request(payload) {
-    console.log('requesting ',payload);
+    // console.log('requesting ',payload);
     return new Promise(async (resole, reject) => {
       try {
         const errMsg = this.ReqMsg.verify(payload);
         if (errMsg) return reject(errMsg);
         const message = this.ReqMsg.create(payload);
-        console.log(message);
+        // console.log(message);
         const buffer = this.ReqMsg.encode(message).finish();
         const res = await this.ws.send(buffer);
         const json = this.RespMsg.decode(res);
