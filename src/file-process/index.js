@@ -1,9 +1,9 @@
-const WsProto = require("./ws-proto");
+const WsProto = require('websocket-grpc');
 const fileSlice = require("fs-slicer");
 const md5File = require("md5-file");
 const path = require("path");
 const fs = require("fs");
-const ProgressBar = require("../util/color-progress-bar");
+const ProgressBar = require('color-progress-bar');
 const wsproto = new WsProto();
 
 module.exports = { upload, download, getFileInfo };
@@ -31,9 +31,10 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
     let progressBar;
     if (showProgressBar) {
       progressBar = new ProgressBar(
-        "uploading [:bar] :rate/bps :percent last: :etas",
-        50,
-        totleSize
+        "uploading [:bar] :rate/bps :percent last: :etas",{
+          width: 50,
+          total: totleSize
+        }
       );
     }
     for (const info of buffInfoArray) {
