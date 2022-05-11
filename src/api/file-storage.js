@@ -4,16 +4,12 @@ const fs = require("fs");
 const path = require("path");
 const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
+const { uint8ArrayToIP } = require("../util");
 const { getFileInfo, upload, download } = require("../file-process");
 
 module.exports = class ControlApi extends ControlBase {
   constructor(config) {
     super(config);
-  }
-  async timestamp() {
-    await this.api.isReady;
-    const result = await this.api.query.timestamp.now();
-    return result.toHuman();
   }
   //Find curr price
   async findPrice() {
@@ -74,16 +70,6 @@ module.exports = class ControlApi extends ControlBase {
       return e;
     }
   }
-  uint8ArrayToString(u8arr) {
-    var dataString = "";
-    for (var i = 0; i < u8arr.length; i++) {
-      dataString += String.fromCharCode(u8arr[i]);
-    }
-    return dataString;
-  }
-  uint8ArrayToIP(u8arr) {
-    return this.uint8ArrayToString(bs58.decode(this.uint8ArrayToString(u8arr)));
-  }
   async findSchedulerIPs(onlyone) {
     return new Promise(async (resolve, reject) => {
       const result = await this.api.query.fileMap.schedulerMap();
@@ -94,27 +80,21 @@ module.exports = class ControlApi extends ControlBase {
       const ips = [];
       for (let r of result) {
         try {
-          const ip = this.uint8ArrayToIP(r.ip);
+          const ip = uint8ArrayToIP(r.ip);
           ips.push("ws://" + ip);
         } catch (e) {}
       }
       if (ips.length == 0) {
         return reject("ip list is null");
       }
-      console.log('ips',ips);
+      console.log("ips", ips);
       if (onlyone) {
         return resolve(ips[0]);
       }
       resolve(ips);
     });
   }
-  async fileUpload(
-    mnemonic,
-    filePath,
-    privatekey,
-    backups,
-    downloadfee
-  ) {
+  async fileUpload(mnemonic, filePath, privatekey, backups, downloadfee) {
     return new Promise(async (resolve, reject) => {
       try {
         if (!mnemonic) {
@@ -123,7 +103,7 @@ module.exports = class ControlApi extends ControlBase {
         if (!filePath) {
           throw "filePath is null";
         }
-        let ispublic=privatekey?true:false;
+        let ispublic = privatekey ? true : false;
         if (!ispublic && privatekey) {
           await new FileCrypt(privatekey).encrypt(
             filePath,
@@ -160,7 +140,12 @@ module.exports = class ControlApi extends ControlBase {
             if (!result.dispatchInfo) {
               return "Cannot get `dispatchInfo` from the result.";
             }
-            console.log(" extrinsic status:",result.status.isFinalized,",hash:", extrinsicHash);
+            console.log(
+              " extrinsic status:",
+              result.status.isFinalized,
+              ",hash:",
+              extrinsicHash
+            );
             unsub();
             // return;
             //upload to sminer
@@ -303,5 +288,13 @@ module.exports = class ControlApi extends ControlBase {
         return e;
       }
     });
+  }
+  async fileEncrypt(filePath, newFilePath, privatekey) {
+    const fileCrypt=new FileCrypt(privatekey);
+    return fileCrypt.encrypt(filePath, newFilePath);
+  }
+  async fileDecrypt(filePath, newFilePath, privatekey) {
+    const fileCrypt=new FileCrypt(privatekey);
+    return fileCrypt.decrypt(filePath, newFilePath);
   }
 };
