@@ -1,18 +1,32 @@
 {
   "name": "cess-js-sdk",
-  "version": "1.0.1",
-  "description": "js-sdk for Cess Project file storage",
+  "version": "1.0.4",
+  "description": "A js-sdk for Cess Project with file storage",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/CESSProject/cess-js-sdk.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "homepage": "https://www.cess.cloud",
+  "keywords": [
+    "cess",
+    "file storage",
+    "polkadot api",
+    "polkadot.js",
+    "protobufjs",
+    "polkadot",
+    "block chain",
+    "chain",
+    "ipfs",
+    "filecoin",
+    "Substrate",
+    "polkadot-js"
+  ],
+  "author": "chenbinfa",
+  "license": "MIT",
   "dependencies": {
     "@polkadot/api": "^8.2.1",
     "bs58": "^5.0.0",
@@ -23,5 +37,8 @@
     "protobufjs": "^6.11.2",
     "short-uuid": "^4.2.0",
     "websocket-grpc": "^1.1.4"
+  },
+  "devDependencies": {
+    "mocha": "^10.0.0"
   }
 }

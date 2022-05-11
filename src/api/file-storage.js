@@ -36,7 +36,8 @@ module.exports = class ControlApi extends ControlBase {
       let result = await this.api.query.fileBank.userHoldSpaceDetails(
         accountId
       );
-      return result.toHuman();
+      // return result.toHuman();
+      return result.toJSON();
     } catch (e) {
       console.error(e);
       return e;
@@ -188,8 +189,11 @@ module.exports = class ControlApi extends ControlBase {
           throw "fileSaveDir is null";
         }
         const fileInfo = await this.findFile(fileId);
-        console.log(fileInfo);
-        if (!fileInfo.fileState || fileInfo.fileState != "active") {
+        if (
+          !fileInfo ||
+          !fileInfo.fileState ||
+          fileInfo.fileState != "active"
+        ) {
           throw "The file has not been backed up";
         }
         const fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
@@ -227,7 +231,7 @@ module.exports = class ControlApi extends ControlBase {
             if (!result.dispatchInfo) {
               return "Cannot get `dispatchInfo` from the result.";
             }
-            console.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+            // console.log("extrinsic suceess extrinsicHash:", extrinsicHash);
             unsub();
             // return extrinsicHash;
             resolve(extrinsicHash);
@@ -290,11 +294,11 @@ module.exports = class ControlApi extends ControlBase {
     });
   }
   async fileEncrypt(filePath, newFilePath, privatekey) {
-    const fileCrypt=new FileCrypt(privatekey);
+    const fileCrypt = new FileCrypt(privatekey);
     return fileCrypt.encrypt(filePath, newFilePath);
   }
   async fileDecrypt(filePath, newFilePath, privatekey) {
-    const fileCrypt=new FileCrypt(privatekey);
+    const fileCrypt = new FileCrypt(privatekey);
     return fileCrypt.decrypt(filePath, newFilePath);
   }
 };
