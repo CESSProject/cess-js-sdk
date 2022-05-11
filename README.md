@@ -59,3 +59,9 @@ keyring.getPublicKeyFromMnemonic(accountId).then(console.log,console.log);
 const addr='AccountId is wallet address';
 keyring.getPublicKeyFromAccountId(addr).then(console.log,console.log);
 ```
+
+[More usage in example folder file-storage.js](./example/file-storage.js)
+
+or 
+
+[More usage in example folder keyring.js](./example/keyring.js)
