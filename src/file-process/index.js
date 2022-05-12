@@ -70,8 +70,8 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
         return reject(err);
       }
     }
-    console.log("upload complete!");
-    resolve();
+    // console.log("upload complete!");
+    resolve(fileId);
   });
 }
 
