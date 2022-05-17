@@ -51,9 +51,9 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
             fileId: fileId,
             fileHash: fileHash,
             backups: "1",
-            blocks: buffInfoArray.length,
+            blocks: i,
             blockSize: buf.length,
-            blockNum: i,
+            blockNum: buffInfoArray.length,
             data: buf,
           },
         };

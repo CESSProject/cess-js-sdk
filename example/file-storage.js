@@ -2,9 +2,9 @@ const { FileStorage, Keyring } = require("../");
 const config = require("./config");
 
 const accountId =
-  "brisk mimic course swallow balcony view odor agree original lion antique bridge";
-const addr = "5FFTWbBFNxggSstPbn2jfLs5KrxgxehuntFrE6JH9KpvnMjx";
-let fileId = "4N1aDXmSs2Nxt56abVoD7q";
+  "shove switch cash actor icon hollow afford want album tattoo tree peanut";
+const addr = "5DiG338NH418jPNRUJ2WLYhAMVBtBA6GiqLPrS1QzdnMme9F";
+let fileId = "oQMfvDsuxRbXG2wHzRWMKP";
 
 const api = new FileStorage(config);
 
@@ -12,7 +12,7 @@ const api = new FileStorage(config);
 // findPurchasedSpace();
 // findFile();
 // findFileList();
-// fileUpload();
+fileUpload();
 // fileDownload();
 // expansion();
 // fileDelete();

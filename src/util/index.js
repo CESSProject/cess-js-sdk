@@ -1,3 +1,5 @@
+const bs58 = require("bs58");
+
 module.exports={
     uint8ArrayToString,
     uint8ArrayToIP
@@ -10,5 +12,5 @@ function uint8ArrayToString(u8arr) {
   return dataString;
 }
 function uint8ArrayToIP(u8arr) {
-  return this.uint8ArrayToString(bs58.decode(this.uint8ArrayToString(u8arr)));
+  return uint8ArrayToString(bs58.decode(uint8ArrayToString(u8arr)));
 }

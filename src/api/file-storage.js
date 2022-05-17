@@ -1,5 +1,4 @@
 const ControlBase = require("../control-base");
-const bs58 = require("bs58");
 const fs = require("fs");
 const path = require("path");
 const short = require("short-uuid");
@@ -83,12 +82,14 @@ module.exports = class ControlApi extends ControlBase {
         try {
           const ip = uint8ArrayToIP(r.ip);
           ips.push("ws://" + ip);
-        } catch (e) {}
+        } catch (e) {
+          console.log(e);
+        }
       }
       if (ips.length == 0) {
         return reject("ip list is null");
       }
-      console.log("ips", ips);
+      // console.log("ips", ips);
       if (onlyone) {
         return resolve(ips[0]);
       }
