@@ -5,6 +5,7 @@ const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
 const { uint8ArrayToIP } = require("../util");
 const { getFileInfo, upload, download } = require("../file-process");
+const { stringToU8a, u8aToHex } = require("@polkadot/util");
 
 module.exports = class ControlApi extends ControlBase {
   constructor(config) {
@@ -70,30 +71,53 @@ module.exports = class ControlApi extends ControlBase {
       return e;
     }
   }
+  getIP(raw,protoName,onlyone){
+    if (raw.length == 0) {
+      return null;
+    }
+    const ips = [];
+    for (let r of raw) {
+      try {
+        const ip = uint8ArrayToIP(r[protoName]);
+        ips.push("ws://" + ip);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    if (ips.length == 0) {
+      return null;
+    }
+    // console.log("ips", ips);
+    if (onlyone) {
+      return ips[0];
+    }
+    return ips;
+  }
   async findSchedulerIPs(onlyone) {
     return new Promise(async (resolve, reject) => {
       const result = await this.api.query.fileMap.schedulerMap();
+      return resolve(this.getIP(result,'ip',onlyone));
       // console.log(result.toHuman());
-      if (result.length == 0) {
-        return reject("scheduler is not found");
-      }
-      const ips = [];
-      for (let r of result) {
-        try {
-          const ip = uint8ArrayToIP(r.ip);
-          ips.push("ws://" + ip);
-        } catch (e) {
-          console.log(e);
-        }
-      }
-      if (ips.length == 0) {
-        return reject("ip list is null");
-      }
-      // console.log("ips", ips);
-      if (onlyone) {
-        return resolve(ips[0]);
-      }
-      resolve(ips);
+      // if (result.length == 0) {
+      //   return reject("scheduler is not found");
+      // }
+      // const ips = [];
+      // for (let r of result) {
+      //   try {
+      //     const ip = uint8ArrayToIP(r.ip);
+      //     ips.push("ws://" + ip);
+      //   } catch (e) {
+      //     console.log(e);
+      //   }
+      // }
+      // if (ips.length == 0) {
+      //   return reject("ip list is null");
+      // }
+      // // console.log("ips", ips);
+      // if (onlyone) {
+      //   return resolve(ips[0]);
+      // }
+      // resolve(ips);
     });
   }
   async fileUpload(mnemonic, filePath, privatekey, backups, downloadfee) {
@@ -105,8 +129,8 @@ module.exports = class ControlApi extends ControlBase {
         if (!filePath) {
           throw "filePath is null";
         }
-        let ispublic = privatekey ? true : false;
-        if (!ispublic && privatekey) {
+        let ispublic = privatekey ? false : true;
+        if (!ispublic) {
           await new FileCrypt(privatekey).encrypt(
             filePath,
             filePath + ".crypt"
@@ -189,7 +213,9 @@ module.exports = class ControlApi extends ControlBase {
         if (!fileSaveDir) {
           throw "fileSaveDir is null";
         }
-        const fileInfo = await this.findFile(fileId);
+        await this.api.isReady;
+        const result = await this.api.query.fileBank.file(fileId);
+        const fileInfo =result.toHuman();
         if (
           !fileInfo ||
           !fileInfo.fileState ||
@@ -197,6 +223,8 @@ module.exports = class ControlApi extends ControlBase {
         ) {
           throw "The file has not been backed up";
         }
+        console.log('fileInfo',fileInfo);
+        // const wsURL =this.getIP(fileInfo.fileDupl,'minerIp',true);
         const fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
         const wsURL = await this.findSchedulerIPs(1);
         console.log(wsURL);
@@ -254,6 +282,57 @@ module.exports = class ControlApi extends ControlBase {
       } catch (e) {
         console.error(e);
         return e;
+      }
+    });
+  }
+  async buySpace(mnemonic, spaceCount, leaseCount, maxPrice) {
+    // await this.api.isReady;
+    // const pair = this.keyring.createFromUri(mnemonic);
+    // const extrinsic = this.api.tx.fileBank.buySpace(
+    //   spaceCount,
+    //   leaseCount,
+    //   maxPrice
+    // );
+    // // let transactionStr = pair.sign(extrinsic.toU8a(true));
+    // extrinsic.
+    // let message=extrinsic.toU8a(true);
+    // const signature = pair.sign(message);
+    // const isValid = pair.verify(
+    //   message,
+    //   signature,
+    //   pair.publicKey
+    // );
+
+    // console.log('signature.toHuman()',signature.toString());
+    // // output the result
+    // console.log(`${u8aToHex(signature)} is ${isValid ? "valid" : "invalid"}`);
+
+    // // const extrinsicHash = extrinsic.hash.toHex();
+    // // let transactionStr = pair.sign(extrinsic.transaction);
+    // // let transactionStr = extrinsic.sign(pair);
+    // return this.submitTransaction(signature);
+
+    // // const message = stringToU8a("this is our message");
+    // // const signature = alice.sign(message);
+    // // const isValid = alice.verify(message, signature, alice.publicKey);
+  }
+  async submitTransaction(transaction) {
+    return new Promise(async (resolve, reject) => {
+      await this.api.isReady;
+      const api = this.api;
+      let tx;
+      try {
+        tx = api.tx(transaction);
+      } catch (err) {
+        reject(err);
+      }
+      try {
+        const hash = await api.rpc.author.submitExtrinsic(tx);
+        return {
+          hash,
+        };
+      } catch (err) {
+        reject(err);
       }
     });
   }

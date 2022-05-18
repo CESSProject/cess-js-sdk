@@ -2,9 +2,9 @@ const { FileStorage, Keyring } = require("../");
 const config = require("./config");
 
 const accountId =
-  "shove switch cash actor icon hollow afford want album tattoo tree peanut";
-const addr = "5DiG338NH418jPNRUJ2WLYhAMVBtBA6GiqLPrS1QzdnMme9F";
-let fileId = "oQMfvDsuxRbXG2wHzRWMKP";
+  "denial empower wear venue distance leopard lamp source off other twelve permit";
+const addr = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
+let fileId = "uT9cyumWeVKuhEuqe5u2vi";
 
 const api = new FileStorage(config);
 
@@ -12,8 +12,8 @@ const api = new FileStorage(config);
 // findPurchasedSpace();
 // findFile();
 // findFileList();
-fileUpload();
-// fileDownload();
+// fileUpload();
+fileDownload();
 // expansion();
 // fileDelete();
 // fileEncrypt();
@@ -45,10 +45,9 @@ function fileUpload() {
 function fileDownload() {
   const fileSaveDir = "./file/down/";
   const privatekey = "123456";
-  const fileId = "cwnbtK1XpnDkmP3fV9DKXg";
   //mnemonic, fileId, fileSaveDir, privatekey
   api
-    .fileDownload(accountId, fileId, fileSaveDir, privatekey)
+    .fileDownload(accountId, fileId, fileSaveDir)
     .then(console.log, console.log);
   // https://cess.yuque.com/zw1p48/project/nyceow#a89bc375
 }
