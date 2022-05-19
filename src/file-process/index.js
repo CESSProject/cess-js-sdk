@@ -16,11 +16,11 @@ function getFileInfo(filePath) {
   };
 }
 
-function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
+function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar,log) {
   return new Promise(async (resolve, reject) => {
     const buffInfoArray = fileSlice.getSliceInfoArr(sourFilePath, 2097152); // max length 2MB  = 2097152
     const totleSize = buffInfoArray[buffInfoArray.length - 1].end;
-    console.log(buffInfoArray);
+    log(buffInfoArray);
     let i = 0;
     await wsproto.init(
       wsUrl,
@@ -42,7 +42,7 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
       try {
         i++;
         const buf = await fileSlice.readOneBlock(sourFilePath, info);
-        // console.log(buf.length);continue;
+        // log(buf.length);continue;
         const payload = {
           version: 1,
           id: 2,
@@ -65,13 +65,13 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
         if (res.body.msg != "success") {
           return reject(res.body.msg);
         }
-        // console.log(res);
+        // log(res);
       } catch (err) {
         console.error(err);
         return reject(err);
       }
     }
-    // console.log("upload complete!");
+    // log("upload complete!");
     resolve(fileId);
   });
 }
@@ -82,7 +82,8 @@ function download(
   fileId,
   fileHash,
   wsUrl,
-  showProgressBar
+  showProgressBar,
+  log
 ) {
   return new Promise(async (resolve, reject) => {
     let isFinish = false;
@@ -112,21 +113,21 @@ function download(
           },
         };
         let json = await wsproto.request(payload);
-        // console.log(json);
+        // log(json);
         if (
           json.body.msg &&
           json.body.msg == "success" &&
           json.body.data.data
         ) {
           // fs.writeFileSync("b.txt", json.body.data.data);
-          // console.log("index=" + blocks, "size=" + json.body.data.data.length);
+          // log("index=" + blocks, "size=" + json.body.data.data.length);
           bufs.push(json.body.data.data);
           blockNum = json.body.data.blockNum;
           blocks = json.body.data.blocks;
-          // console.log("blockNum:", blockNum, "blocks:", blocks);
+          // log("blockNum:", blockNum, "blocks:", blocks);
           if (showProgressBar) {
             if (i === 1) {
-              console.log("total blocks:", blockNum);
+              log("total blocks:", blockNum);
               progressBar = new ProgressBar(
                 "downloading [:bar] :percent :current/:total",
                 {
@@ -146,7 +147,7 @@ function download(
             isFinish = true;
           }
         } else {
-          // console.log(json);
+          // log(json);
           isFinish = true;
         }
       } catch (e) {
@@ -155,7 +156,7 @@ function download(
       }
     }
     await fileSlice.joinBlcoksToFile(newFilePath, bufs);
-    console.error("complete");
+    log("complete");
     resolve();
   });
 }

@@ -1,20 +1,22 @@
-const { FileStorage, Keyring } = require("../");
+const { FileStorage } = require("../");
 const config = require("./config");
 
-const accountId =
+const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
-const addr = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "jc86Zbs7y3z2egw7qZ1hbi";
+const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
+let fileId = "aKEHqHxtiovX6RAYG1o1Mz";
 
 const api = new FileStorage(config);
 
 // findPrice();
 // findPurchasedSpace();
+// expansion();
+
 // findFile();
-findFileList();
+// findFileList();
+
 // fileUpload();
 // fileDownload();
-// expansion();
 // fileDelete();
 // fileEncrypt();
 // fileDecrypt();
@@ -23,21 +25,21 @@ function findPrice() {
   api.findPrice().then(console.log, console.log);
 }
 function findPurchasedSpace() {
-  api.findPurchasedSpace(addr).then(console.log, console.log);
+  api.findPurchasedSpace(walletAddress).then(console.log, console.log);
 }
 function findFile() {
   api.findFile(fileId).then(console.log, console.log);
 }
 function findFileList() {
-  api.findFileList(addr).then(console.log, console.log);
+  api.findFileList(walletAddress).then(console.log, console.log);
 }
 function fileUpload() {
-  const filePath = "./file/a.exe";
+  const filePath = "./file/a.zip";
   const privatekey = "123456",
     backups = 1,
     downloadfee = 0;
   api
-    .fileUpload(accountId, filePath, backups, downloadfee, privatekey)
+    .fileUpload(mnemonic, filePath, backups, downloadfee, privatekey)
     .then(console.log, console.error);
   // https://cess.yuque.com/zw1p48/project/nyceow#a89bc375
 }
@@ -61,11 +63,11 @@ function expansion() {
   let leaseCount = 1;
   let maxPrice = 0;
   api
-    .expansion(accountId, spaceCount, leaseCount, maxPrice)
+    .buySpace(mnemonic, spaceCount, leaseCount, maxPrice)
     .then(console.log, console.log);
 }
 function fileDelete() {
-  api.fileDelete(accountId, fileId).then(console.log, console.log);
+  api.fileDelete(mnemonic, fileId).then(console.log, console.log);
 }
 function fileEncrypt() {
   let filePath = "./package.json",

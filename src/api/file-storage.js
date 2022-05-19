@@ -4,9 +4,7 @@ const path = require("path");
 const md5File = require("md5-file");
 const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
-const { uint8ArrayToIP } = require("../util");
 const { getFileInfo, upload, download } = require("../file-process");
-const { stringToU8a, u8aToHex } = require("@polkadot/util");
 
 module.exports = class ControlApi extends ControlBase {
   constructor(config) {
@@ -23,24 +21,24 @@ module.exports = class ControlApi extends ControlBase {
       const price = (1024 / parseFloat(available - purchased)) * 1000; //CESS/MB
       return price;
     } catch (e) {
-      console.error(e);
+      this.error(e);
       return e;
     }
   }
-  //Find my space by accountId(wallet address)
-  async findPurchasedSpace(accountId) {
+  //Find my space by walletAddress
+  async findPurchasedSpace(walletAddress) {
     try {
-      if (!accountId) {
-        throw "accountId is null";
+      if (!walletAddress) {
+        throw "walletAddress is null";
       }
       await this.api.isReady;
       let result = await this.api.query.fileBank.userHoldSpaceDetails(
-        accountId
+        walletAddress
       );
       // return result.toHuman();
       return result.toJSON();
     } catch (e) {
-      console.error(e);
+      this.error(e);
       return e;
     }
   }
@@ -54,51 +52,31 @@ module.exports = class ControlApi extends ControlBase {
       let result = await this.api.query.fileBank.file(fileId);
       return result.toHuman();
     } catch (e) {
-      console.error(e);
+      this.error(e);
       return e;
     }
   }
-  //Find my hold file list by accountId
-  async findFileList(accountId) {
+  //Find my hold file list by walletAddress
+  async findFileList(walletAddress) {
     try {
-      if (!accountId) {
-        throw "accountId is null";
+      if (!walletAddress) {
+        throw "walletAddress is null";
       }
       await this.api.isReady;
-      let result = await this.api.query.fileBank.userHoldFileList(accountId);
+      let result = await this.api.query.fileBank.userHoldFileList(
+        walletAddress
+      );
       return result.toHuman();
     } catch (e) {
-      console.error(e);
+      this.error(e);
       return e;
     }
-  }
-  getIP(raw, protoName, onlyone) {
-    if (raw.length == 0) {
-      return null;
-    }
-    const ips = [];
-    for (let r of raw) {
-      try {
-        const ip = uint8ArrayToIP(r[protoName]);
-        ips.push("ws://" + ip);
-      } catch (e) {
-        console.log(e);
-      }
-    }
-    if (ips.length == 0) {
-      return null;
-    }
-    // console.log("ips", ips);
-    if (onlyone) {
-      return ips[0];
-    }
-    return ips;
   }
   async findSchedulerIPs(onlyone) {
     return new Promise(async (resolve, reject) => {
       const result = await this.api.query.fileMap.schedulerMap();
       return resolve(this.getIP(result, "ip", onlyone));
-      // console.log(result.toHuman());
+      // this.log(result.toHuman());
       // if (result.length == 0) {
       //   return reject("scheduler is not found");
       // }
@@ -108,13 +86,13 @@ module.exports = class ControlApi extends ControlBase {
       //     const ip = uint8ArrayToIP(r.ip);
       //     ips.push("ws://" + ip);
       //   } catch (e) {
-      //     console.log(e);
+      //     this.log(e);
       //   }
       // }
       // if (ips.length == 0) {
       //   return reject("ip list is null");
       // }
-      // // console.log("ips", ips);
+      // // this.log("ips", ips);
       // if (onlyone) {
       //   return resolve(ips[0]);
       // }
@@ -123,6 +101,7 @@ module.exports = class ControlApi extends ControlBase {
   }
   async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
     return new Promise(async (resolve, reject) => {
+      const that = this;
       try {
         if (!mnemonic) {
           throw "mnemonic is null";
@@ -153,21 +132,21 @@ module.exports = class ControlApi extends ControlBase {
           filesize,
           downloadfee
         );
-        console.log("fileid:", fileid);
-        console.log("filehash:", filehash);
+        this.log("fileid:", fileid);
+        this.log("filehash:", filehash);
         const extrinsicHash = extrinsic.hash.toHex();
 
-        // const signerAccount = this.keyring.getPair(accountId);
+        // const signerAccount = this.keyring.getPair(walletAddress);
 
         const unsub = await extrinsic.signAndSend(pair, (result) => {
           // unsub();
-          // console.log(result.status);
-          // console.log('extrinsicHash:',extrinsicHash);
+          // this.log(result.status);
+          // this.log('extrinsicHash:',extrinsicHash);
           if (result.status.isInBlock || result.status.isFinalized) {
             if (!result.dispatchInfo) {
               return "Cannot get `dispatchInfo` from the result.";
             }
-            console.log(
+            that.log(
               " extrinsic status:",
               result.status.isFinalized,
               ",hash:",
@@ -176,7 +155,7 @@ module.exports = class ControlApi extends ControlBase {
             unsub();
             // return;
             //upload to sminer
-            upload(filePath, fileid, filehash, wsURL, true).then(
+            upload(filePath, fileid, filehash, wsURL, true, that.log).then(
               resolve,
               reject
             );
@@ -191,19 +170,20 @@ module.exports = class ControlApi extends ControlBase {
             );
           } else if (result.isError) {
             unsub();
-            console.error("error", result.isError);
+            that.error("error", result.isError);
             return reject(result.isError);
           }
         });
       } catch (e) {
-        console.error("have error and break");
-        console.error(e);
+        this.error("have error and break");
+        this.error(e);
         reject(e);
       }
     });
   }
   async fileDownload(fileId, fileSaveDir, privatekey) {
     return new Promise(async (resolve, reject) => {
+      const that = this;
       try {
         if (!fileId) {
           return reject("fileId is null");
@@ -214,26 +194,26 @@ module.exports = class ControlApi extends ControlBase {
         await this.api.isReady;
         const result = await this.api.query.fileBank.file(fileId);
         const fileInfo = result.toHuman();
-        if (
-          !fileInfo ||
-          !fileInfo.fileState ||
-          fileInfo.fileState != "active"
-        ) {
+        if (!fileInfo || !fileInfo.fileState) {
+          return reject("File not found.");
+        }
+        if (fileInfo.fileState != "active") {
           return reject("The file has not been backed up");
         }
-        console.log("fileInfo", fileInfo);
+        that.log("fileInfo", fileInfo);
         // const wsURL =this.getIP(fileInfo.fileDupl,'minerIp',true);
         let fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
         const wsURL = await this.findSchedulerIPs(1);
-        console.log(wsURL);
-        // console.log('mnemonic.address',mnemonic.address);
+        that.log(wsURL);
+        // this.log('mnemonic.address',mnemonic.address);
         await download(
           fileInfo.userAddr,
           fileSavePath,
           fileId,
           fileInfo.fileHash,
           wsURL,
-          true
+          true,
+          that.log
         );
         const fileHash = md5File.sync(fileSavePath);
         if (fileHash != fileInfo.fileHash) {
@@ -248,13 +228,13 @@ module.exports = class ControlApi extends ControlBase {
             fs.unlinkSync(fileSavePath);
             fileSavePath = newFilePath;
           } catch (err) {
-            console.log(err);
+            that.log(err);
             // fs.renameSync(fileSavePath + ".crypt", fileSavePath);
           }
         }
         resolve(fileSavePath);
       } catch (e) {
-        console.error(e);
+        this.error(e);
         reject(e);
       }
     });
@@ -276,7 +256,7 @@ module.exports = class ControlApi extends ControlBase {
             if (!result.dispatchInfo) {
               return "Cannot get `dispatchInfo` from the result.";
             }
-            // console.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+            // this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
             unsub();
             // return extrinsicHash;
             resolve(extrinsicHash);
@@ -292,64 +272,42 @@ module.exports = class ControlApi extends ControlBase {
             unsub();
             reject(result.toHuman());
           } else {
-            console.log(result.toHuman());
+            this.log(result.toHuman());
           }
         });
       } catch (e) {
-        console.error(e);
+        this.error(e);
         return e;
       }
     });
-  }
+  }  
   async buySpace(mnemonic, spaceCount, leaseCount, maxPrice) {
-    // await this.api.isReady;
-    // const pair = this.keyring.createFromUri(mnemonic);
-    // const extrinsic = this.api.tx.fileBank.buySpace(
-    //   spaceCount,
-    //   leaseCount,
-    //   maxPrice
-    // );
-    // // let transactionStr = pair.sign(extrinsic.toU8a(true));
-    // extrinsic.
-    // let message=extrinsic.toU8a(true);
-    // const signature = pair.sign(message);
-    // const isValid = pair.verify(
-    //   message,
-    //   signature,
-    //   pair.publicKey
-    // );
-    // console.log('signature.toHuman()',signature.toString());
-    // // output the result
-    // console.log(`${u8aToHex(signature)} is ${isValid ? "valid" : "invalid"}`);
-    // // const extrinsicHash = extrinsic.hash.toHex();
-    // // let transactionStr = pair.sign(extrinsic.transaction);
-    // // let transactionStr = extrinsic.sign(pair);
-    // return this.submitTransaction(signature);
-    // // const message = stringToU8a("this is our message");
-    // // const signature = alice.sign(message);
-    // // const isValid = alice.verify(message, signature, alice.publicKey);
-  }
-  async submitTransaction(transaction) {
-    return new Promise(async (resolve, reject) => {
+    try {
       await this.api.isReady;
-      const api = this.api;
-      let tx;
-      try {
-        tx = api.tx(transaction);
-      } catch (err) {
-        reject(err);
-      }
-      try {
-        const hash = await api.rpc.author.submitExtrinsic(tx);
-        return {
-          hash,
-        };
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
+      const tx = this.api.tx.fileBank.buySpace(
+        spaceCount,
+        leaseCount,
+        maxPrice
+      );
+      await this.sign(mnemonic, tx);
+      const hash = await this.submitTransaction(tx.toHex());
+      return hash;
+    } catch (error) {
+      console.error(error);
+    }
+  }  
   async fileDelete(mnemonic, fileid) {
+    try {
+      await this.api.isReady;
+      const tx = this.api.tx.fileBank.deleteFile(fileid);
+      await this.sign(mnemonic, tx);
+      const hash = await this.submitTransaction(tx.toHex());
+      return hash;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  async deleteFile(mnemonic, fileid) {
     return new Promise(async (resolve, reject) => {
       try {
         await this.api.isReady;
@@ -361,7 +319,7 @@ module.exports = class ControlApi extends ControlBase {
             if (!result.dispatchInfo) {
               return "Cannot get `dispatchInfo` from the result.";
             }
-            console.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+            this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
             unsub();
             // return extrinsicHash;
             resolve(extrinsicHash);
@@ -377,11 +335,11 @@ module.exports = class ControlApi extends ControlBase {
             unsub();
             reject(result.toHuman());
           } else {
-            console.log(result.toHuman());
+            this.log(result.toHuman());
           }
         });
       } catch (e) {
-        console.error(e);
+        this.error(e);
         return e;
       }
     });
