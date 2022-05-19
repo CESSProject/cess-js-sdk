@@ -1,6 +1,7 @@
 const ControlBase = require("../control-base");
 const fs = require("fs");
 const path = require("path");
+const md5File = require("md5-file");
 const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
 const { uint8ArrayToIP } = require("../util");
@@ -71,7 +72,7 @@ module.exports = class ControlApi extends ControlBase {
       return e;
     }
   }
-  getIP(raw,protoName,onlyone){
+  getIP(raw, protoName, onlyone) {
     if (raw.length == 0) {
       return null;
     }
@@ -96,7 +97,7 @@ module.exports = class ControlApi extends ControlBase {
   async findSchedulerIPs(onlyone) {
     return new Promise(async (resolve, reject) => {
       const result = await this.api.query.fileMap.schedulerMap();
-      return resolve(this.getIP(result,'ip',onlyone));
+      return resolve(this.getIP(result, "ip", onlyone));
       // console.log(result.toHuman());
       // if (result.length == 0) {
       //   return reject("scheduler is not found");
@@ -120,7 +121,7 @@ module.exports = class ControlApi extends ControlBase {
       // resolve(ips);
     });
   }
-  async fileUpload(mnemonic, filePath, privatekey, backups, downloadfee) {
+  async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
     return new Promise(async (resolve, reject) => {
       try {
         if (!mnemonic) {
@@ -201,40 +202,55 @@ module.exports = class ControlApi extends ControlBase {
       }
     });
   }
-  async fileDownload(mnemonic, fileId, fileSaveDir, privatekey) {
+  async fileDownload(fileId, fileSaveDir, privatekey) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (!mnemonic) {
-          throw "mnemonic is null";
-        }
         if (!fileId) {
-          throw "fileId is null";
+          return reject("fileId is null");
         }
         if (!fileSaveDir) {
-          throw "fileSaveDir is null";
+          return reject("fileSaveDir is null");
         }
         await this.api.isReady;
         const result = await this.api.query.fileBank.file(fileId);
-        const fileInfo =result.toHuman();
+        const fileInfo = result.toHuman();
         if (
           !fileInfo ||
           !fileInfo.fileState ||
           fileInfo.fileState != "active"
         ) {
-          throw "The file has not been backed up";
+          return reject("The file has not been backed up");
         }
-        console.log('fileInfo',fileInfo);
+        console.log("fileInfo", fileInfo);
         // const wsURL =this.getIP(fileInfo.fileDupl,'minerIp',true);
-        const fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
+        let fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
         const wsURL = await this.findSchedulerIPs(1);
         console.log(wsURL);
-        await download(fileSavePath, fileId, fileInfo.fileHash, wsURL);
+        // console.log('mnemonic.address',mnemonic.address);
+        await download(
+          fileInfo.userAddr,
+          fileSavePath,
+          fileId,
+          fileInfo.fileHash,
+          wsURL,
+          true
+        );
+        const fileHash = md5File.sync(fileSavePath);
+        if (fileHash != fileInfo.fileHash) {
+          fs.unlinkSync(fileSavePath);
+          return reject("fileHash not equal.");
+        }
         if (!fileInfo.public && privatekey) {
-          fs.renameSync(fileSavePath, fileSavePath + ".crypt");
-          await new FileCrypt(privatekey).decrypt(
-            fileSavePath + ".crypt",
-            fileSavePath
-          );
+          // fs.renameSync(fileSavePath, fileSavePath + ".crypt");
+          const newFilePath = fileSavePath.replace(".crypt", "");
+          try {
+            await new FileCrypt(privatekey).decrypt(fileSavePath, newFilePath);
+            fs.unlinkSync(fileSavePath);
+            fileSavePath = newFilePath;
+          } catch (err) {
+            console.log(err);
+            // fs.renameSync(fileSavePath + ".crypt", fileSavePath);
+          }
         }
         resolve(fileSavePath);
       } catch (e) {
@@ -302,16 +318,13 @@ module.exports = class ControlApi extends ControlBase {
     //   signature,
     //   pair.publicKey
     // );
-
     // console.log('signature.toHuman()',signature.toString());
     // // output the result
     // console.log(`${u8aToHex(signature)} is ${isValid ? "valid" : "invalid"}`);
-
     // // const extrinsicHash = extrinsic.hash.toHex();
     // // let transactionStr = pair.sign(extrinsic.transaction);
     // // let transactionStr = extrinsic.sign(pair);
     // return this.submitTransaction(signature);
-
     // // const message = stringToU8a("this is our message");
     // // const signature = alice.sign(message);
     // // const isValid = alice.verify(message, signature, alice.publicKey);

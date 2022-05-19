@@ -1,9 +1,9 @@
-const WsProto = require('websocket-grpc');
+const WsProto = require("websocket-grpc");
 const fileSlice = require("fs-slicer");
 const md5File = require("md5-file");
 const path = require("path");
 const fs = require("fs");
-const ProgressBar = require('color-progress-bar');
+const ProgressBar = require("color-progress-bar");
 const wsproto = new WsProto();
 
 module.exports = { upload, download, getFileInfo };
@@ -31,9 +31,10 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
     let progressBar;
     if (showProgressBar) {
       progressBar = new ProgressBar(
-        "uploading [:bar] :rate/bps :percent last: :etas",{
+        "uploading [:bar] :rate/bps :percent last: :etas",
+        {
           width: 50,
-          total: totleSize
+          total: totleSize,
         }
       );
     }
@@ -64,7 +65,7 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
         if (res.body.msg != "success") {
           return reject(res.body.msg);
         }
-        // console.log(res);        
+        // console.log(res);
       } catch (err) {
         console.error(err);
         return reject(err);
@@ -75,7 +76,14 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar) {
   });
 }
 
-function download(newFilePath, fileId, fileHash, wsUrl) {
+function download(
+  walletAddress,
+  newFilePath,
+  fileId,
+  fileHash,
+  wsUrl,
+  showProgressBar
+) {
   return new Promise(async (resolve, reject) => {
     let isFinish = false;
     let bufs = [];
@@ -87,14 +95,17 @@ function download(newFilePath, fileId, fileHash, wsUrl) {
       "ReqMsgDownload",
       "RespMsg"
     );
+    let i = 0;
     while (!isFinish) {
       try {
+        i++;
         var payload = {
           version: 1,
           id: 2,
           method: "readfile",
           service: "wservice",
           body: {
+            walletAddress: walletAddress,
             fileId: fileId,
             fileHash: fileHash,
             blocks,
@@ -112,6 +123,22 @@ function download(newFilePath, fileId, fileHash, wsUrl) {
           bufs.push(json.body.data.data);
           blockNum = json.body.data.blockNum;
           blocks = json.body.data.blocks;
+          // console.log("blockNum:", blockNum, "blocks:", blocks);
+          if (showProgressBar) {
+            if (i === 1) {
+              console.log("total blocks:", blockNum);
+              progressBar = new ProgressBar(
+                "downloading [:bar] :percent :current/:total",
+                {
+                  width: 50,
+                  total: blockNum
+                }
+              );
+              progressBar.tick();
+            }else{
+              progressBar.tick();
+            }
+          }
           if (blocks < blockNum) {
             blocks++;
             isFinish = false;
@@ -119,7 +146,7 @@ function download(newFilePath, fileId, fileHash, wsUrl) {
             isFinish = true;
           }
         } else {
-          console.log(json);
+          // console.log(json);
           isFinish = true;
         }
       } catch (e) {

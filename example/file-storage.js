@@ -4,16 +4,16 @@ const config = require("./config");
 const accountId =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const addr = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "uT9cyumWeVKuhEuqe5u2vi";
+let fileId = "jc86Zbs7y3z2egw7qZ1hbi";
 
 const api = new FileStorage(config);
 
 // findPrice();
 // findPurchasedSpace();
 // findFile();
-// findFileList();
+findFileList();
 // fileUpload();
-fileDownload();
+// fileDownload();
 // expansion();
 // fileDelete();
 // fileEncrypt();
@@ -32,14 +32,13 @@ function findFileList() {
   api.findFileList(addr).then(console.log, console.log);
 }
 function fileUpload() {
-  const filePath = "./file/a.zip";
-  let ispublic = true,
-    privatekey = "123456",
+  const filePath = "./file/a.exe";
+  const privatekey = "123456",
     backups = 1,
     downloadfee = 0;
   api
-    .fileUpload(accountId, filePath, privatekey, backups, downloadfee)
-    .then(console.log, console.log);
+    .fileUpload(accountId, filePath, backups, downloadfee, privatekey)
+    .then(console.log, console.error);
   // https://cess.yuque.com/zw1p48/project/nyceow#a89bc375
 }
 function fileDownload() {
@@ -47,8 +46,14 @@ function fileDownload() {
   const privatekey = "123456";
   //mnemonic, fileId, fileSaveDir, privatekey
   api
-    .fileDownload(accountId, fileId, fileSaveDir)
-    .then(console.log, console.log);
+    .fileDownload(fileId, fileSaveDir, privatekey)
+    .then(console.log, e=>{
+      console.error(e);
+      if(e=='The file has not been backed up'){
+        setTimeout(fileDownload,3000);
+        console.log('Will retry after 3s.')
+      }
+    });
   // https://cess.yuque.com/zw1p48/project/nyceow#a89bc375
 }
 function expansion() {
@@ -68,7 +73,7 @@ function fileEncrypt() {
     privatekey = "123456";
   api
     .fileEncrypt(filePath, newFilePath, privatekey)
-    .then(t=>console.log('encrypt sucess!'), console.error);
+    .then((t) => console.log("encrypt sucess!"), console.error);
 }
 function fileDecrypt() {
   let filePath = "./example/package.json.cess",
@@ -76,5 +81,5 @@ function fileDecrypt() {
     privatekey = "123456";
   api
     .fileDecrypt(filePath, newFilePath, privatekey)
-    .then(t=>console.log('decrypt sucess!'), console.error);
+    .then((t) => console.log("decrypt sucess!"), console.error);
 }
