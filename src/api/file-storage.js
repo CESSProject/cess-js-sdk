@@ -6,7 +6,7 @@ const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
 const { getFileInfo, upload, download } = require("../file-process");
 
-module.exports = class ControlApi extends ControlBase {
+module.exports = class FileStorage extends ControlBase {
   constructor(config) {
     super(config);
   }
@@ -119,7 +119,7 @@ module.exports = class ControlApi extends ControlBase {
         }
         const { filehash, filename, filesize } = getFileInfo(filePath);
         await this.api.isReady;
-        const wsURL = await this.findSchedulerIPs(1);
+        const wsURLs = await this.findSchedulerIPs();
         const pair = this.keyring.createFromUri(mnemonic);
         const fileid = short.generate();
         const extrinsic = this.api.tx.fileBank.upload(
@@ -155,7 +155,7 @@ module.exports = class ControlApi extends ControlBase {
             unsub();
             // return;
             //upload to sminer
-            upload(filePath, fileid, filehash, wsURL, true, that.log).then(
+            upload(filePath, fileid, filehash, wsURLs, true, that.log).then(
               resolve,
               reject
             );
@@ -280,22 +280,22 @@ module.exports = class ControlApi extends ControlBase {
         return e;
       }
     });
-  }  
-  async buySpace(mnemonic, spaceCount, leaseCount, maxPrice) {
-    try {
-      await this.api.isReady;
-      const tx = this.api.tx.fileBank.buySpace(
-        spaceCount,
-        leaseCount,
-        maxPrice
-      );
-      await this.sign(mnemonic, tx);
-      const hash = await this.submitTransaction(tx.toHex());
-      return hash;
-    } catch (error) {
-      console.error(error);
-    }
-  }  
+  }
+  // async buySpace(mnemonic, spaceCount, leaseCount, maxPrice) {
+  //   try {
+  //     await this.api.isReady;
+  //     const tx = this.api.tx.fileBank.buySpace(
+  //       spaceCount,
+  //       leaseCount,
+  //       maxPrice
+  //     );
+  //     await this.sign(mnemonic, tx);
+  //     const hash = await this.submitTransaction(tx.toHex());
+  //     return hash;
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
   async fileDelete(mnemonic, fileid) {
     try {
       await this.api.isReady;
@@ -307,43 +307,43 @@ module.exports = class ControlApi extends ControlBase {
       console.error(error);
     }
   }
-  async deleteFile(mnemonic, fileid) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        await this.api.isReady;
-        const pair = this.keyring.createFromUri(mnemonic);
-        const extrinsic = this.api.tx.fileBank.deleteFile(fileid);
-        const extrinsicHash = extrinsic.hash.toHex();
-        const unsub = await extrinsic.signAndSend(pair, (result) => {
-          if (result.status.isInBlock || result.status.isFinalized) {
-            if (!result.dispatchInfo) {
-              return "Cannot get `dispatchInfo` from the result.";
-            }
-            this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
-            unsub();
-            // return extrinsicHash;
-            resolve(extrinsicHash);
-          } else if (result.status.isDropped) {
-            unsub();
-            reject("isDropped");
-          } else if (result.status.isFinalityTimeout) {
-            unsub();
-            reject(
-              `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
-            );
-          } else if (result.isError) {
-            unsub();
-            reject(result.toHuman());
-          } else {
-            this.log(result.toHuman());
-          }
-        });
-      } catch (e) {
-        this.error(e);
-        return e;
-      }
-    });
-  }
+  // async deleteFile(mnemonic, fileid) {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       await this.api.isReady;
+  //       const pair = this.keyring.createFromUri(mnemonic);
+  //       const extrinsic = this.api.tx.fileBank.deleteFile(fileid);
+  //       const extrinsicHash = extrinsic.hash.toHex();
+  //       const unsub = await extrinsic.signAndSend(pair, (result) => {
+  //         if (result.status.isInBlock || result.status.isFinalized) {
+  //           if (!result.dispatchInfo) {
+  //             return "Cannot get `dispatchInfo` from the result.";
+  //           }
+  //           this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+  //           unsub();
+  //           // return extrinsicHash;
+  //           resolve(extrinsicHash);
+  //         } else if (result.status.isDropped) {
+  //           unsub();
+  //           reject("isDropped");
+  //         } else if (result.status.isFinalityTimeout) {
+  //           unsub();
+  //           reject(
+  //             `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
+  //           );
+  //         } else if (result.isError) {
+  //           unsub();
+  //           reject(result.toHuman());
+  //         } else {
+  //           this.log(result.toHuman());
+  //         }
+  //       });
+  //     } catch (e) {
+  //       this.error(e);
+  //       return e;
+  //     }
+  //   });
+  // }
   async fileEncrypt(filePath, newFilePath, privatekey) {
     const fileCrypt = new FileCrypt(privatekey);
     return fileCrypt.encrypt(filePath, newFilePath);
@@ -351,5 +351,49 @@ module.exports = class ControlApi extends ControlBase {
   async fileDecrypt(filePath, newFilePath, privatekey) {
     const fileCrypt = new FileCrypt(privatekey);
     return fileCrypt.decrypt(filePath, newFilePath);
+  }
+  async fileUploadWithTxHash(txHash, filePath, fileid, privatekey) {
+    return new Promise(async (resolve, reject) => {
+      const that = this;
+      try {
+        if (!txHash) {
+          throw "txHash is null";
+        }
+        if (!filePath) {
+          throw "filePath is null";
+        }
+        let ispublic = privatekey ? false : true;
+        if (!ispublic) {
+          await new FileCrypt(privatekey).encrypt(
+            filePath,
+            filePath + ".crypt"
+          );
+          filePath += ".crypt";
+        }
+        const { filehash } = getFileInfo(filePath);
+        await this.api.isReady;
+        const wsURLs = await this.findSchedulerIPs();
+
+        this.log("fileid:", fileid);
+        this.log("filehash:", filehash);
+
+        const hash = await this.submitTransaction(txHash);
+        this.log("transaction success hash:", hash);
+        return upload(filePath, fileid, filehash, wsURLs, true, that.log).then(
+          resolve,
+          reject
+        );
+      } catch (e) {
+        this.error("have error and break");
+        this.error(e);
+        reject(e);
+      }
+    });
+  }
+  async fileDeleteWithTxHash(txHash) {
+    return this.submitTransaction(txHash);
+  }
+  async expansionTxHash(txHash) {
+    return this.submitTransaction(txHash);
   }
 };

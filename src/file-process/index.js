@@ -16,18 +16,29 @@ function getFileInfo(filePath) {
   };
 }
 
-function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar,log) {
+function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
   return new Promise(async (resolve, reject) => {
     const buffInfoArray = fileSlice.getSliceInfoArr(sourFilePath, 2097152); // max length 2MB  = 2097152
     const totleSize = buffInfoArray[buffInfoArray.length - 1].end;
     log(buffInfoArray);
     let i = 0;
-    await wsproto.init(
-      wsUrl,
-      "./src/file-process/ws.proto",
-      "ReqMsgUpload",
-      "RespMsg"
-    );
+    for (wsUrl of wsUrls) {
+      try {
+        // console.log("try connect to ", wsUrl);
+        let result= await wsproto.init(
+          wsUrl,
+          "./src/file-process/ws.proto",
+          "ReqMsgUpload",
+          "RespMsg"
+        );
+        // console.log('-------result------------',result);
+        break;
+      } catch (e) {
+        // console.log("*************************************************");
+        console.log(wsUrl, "close", e);
+      }
+    }
+    console.log('+++++++++++++++');
     let progressBar;
     if (showProgressBar) {
       progressBar = new ProgressBar(
@@ -52,9 +63,9 @@ function upload(sourFilePath, fileId, fileHash, wsUrl, showProgressBar,log) {
             fileId: fileId,
             fileHash: fileHash,
             backups: "1",
-            blocks: i,
+            blockTotal: buffInfoArray.length,
             blockSize: buf.length,
-            blockNum: buffInfoArray.length,
+            blockIndex: i,
             data: buf,
           },
         };
@@ -88,8 +99,8 @@ function download(
   return new Promise(async (resolve, reject) => {
     let isFinish = false;
     let bufs = [];
-    let blocks = 1;
-    let blockNum = 1;
+    let blockTotal = 1;
+    let blockIndex = 1;
     await wsproto.init(
       wsUrl,
       "./src/file-process/ws.proto",
@@ -109,7 +120,7 @@ function download(
             walletAddress: walletAddress,
             fileId: fileId,
             fileHash: fileHash,
-            blocks,
+            blockTotal,
           },
         };
         let json = await wsproto.request(payload);
@@ -120,28 +131,28 @@ function download(
           json.body.data.data
         ) {
           // fs.writeFileSync("b.txt", json.body.data.data);
-          // log("index=" + blocks, "size=" + json.body.data.data.length);
+          // log("index=" + blockTotal, "size=" + json.body.data.data.length);
           bufs.push(json.body.data.data);
-          blockNum = json.body.data.blockNum;
-          blocks = json.body.data.blocks;
-          // log("blockNum:", blockNum, "blocks:", blocks);
+          blockIndex = json.body.data.blockIndex;
+          blockTotal = json.body.data.blockTotal;
+          // log("blockIndex:", blockIndex, "blockTotal:", blockTotal);
           if (showProgressBar) {
             if (i === 1) {
-              log("total blocks:", blockNum);
+              log("total blockTotal:", blockTotal);
               progressBar = new ProgressBar(
                 "downloading [:bar] :percent :current/:total",
                 {
                   width: 50,
-                  total: blockNum
+                  total: blockTotal,
                 }
               );
               progressBar.tick();
-            }else{
+            } else {
               progressBar.tick();
             }
           }
-          if (blocks < blockNum) {
-            blocks++;
+          if (blockIndex < blockTotal) {
+            blockIndex++;
             isFinish = false;
           } else {
             isFinish = true;

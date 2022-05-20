@@ -1,17 +1,16 @@
-const ControlBase = require("../control-base");
+const defaultConfig = require("../config");
+const { Keyring } = require("@polkadot/api");
 
-module.exports = class ControlApi extends ControlBase {
-  constructor(config) {
-    super(config);
+module.exports = class MyKeyring extends Keyring {
+  constructor(config = defaultConfig) {
+    super(config.keyringOption);
   }
   async getPublicKeyFromMnemonic(mnemonic) {
-    await this.api.isReady;
-    const pair = this.keyring.createFromUri(mnemonic);
+    const pair = this.createFromUri(mnemonic);
     return "0x" + this.toHexString(pair.publicKey);
   }
   async getPublicKeyFromAccountId(accountId) {
-    await this.api.isReady;
-    const pair = this.keyring.addFromAddress(accountId);
+    const pair = this.addFromAddress(accountId);
     return "0x" + this.toHexString(pair.publicKey);
   }
   toHexString(arr) {
