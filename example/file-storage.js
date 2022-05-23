@@ -9,19 +9,19 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "vgJEprLJsWAXRfBkkTod3m";
+let fileId = "kidUz9HaFGwDxXu4gDcrz8";
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
 
-// findPrice();
+findPrice();
 // findPurchasedSpace();
 // expansion();
 
 // findFile();
 // findFileList();
 
-fileUpload();
+// fileUpload();
 // fileDownload();
 // fileDelete();
 // fileEncrypt();
@@ -30,6 +30,7 @@ fileUpload();
 // fileUploadWithTxHash().then(console.log,console.log);
 // fileDeleteWithTxHash().then(console.log,console.log);
 // expansionWithTxHash().then(console.log,console.log);
+
 
 function findPrice() {
   api.findPrice().then(console.log, console.log);
@@ -107,7 +108,7 @@ async function fileUploadWithTxHash() {
 }
 async function getFileDeleteTxHash() {
   try {
-    return api.getFileDeleteTxHash(mnemonic, fileid);
+    return api.getFileDeleteTxHash(mnemonic, fileId);
   } catch (error) {
     console.error(error);
   }
@@ -130,7 +131,7 @@ async function getExpansionTxHash() {
 async function expansionWithTxHash() {
   try {
     const txHash = await getExpansionTxHash();
-    const hash = await api.expansionTxHash(txHash);
+    const hash = await api.expansionWithTxHash(txHash);
     console.log(hash);
   } catch (error) {
     console.error(error);
