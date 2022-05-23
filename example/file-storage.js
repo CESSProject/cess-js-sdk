@@ -1,4 +1,4 @@
-const { FileStorage,Keyring } = require("../");
+const { FileStorage, Keyring } = require("../");
 const config = require("./config");
 const fs = require("fs");
 const path = require("path");
@@ -9,7 +9,7 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "mQQweYap1hD82CpnKYivht";
+let fileId = "vgJEprLJsWAXRfBkkTod3m";
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
@@ -21,7 +21,7 @@ const keyring = new Keyring(config);
 // findFile();
 // findFileList();
 
-// fileUpload();
+fileUpload();
 // fileDownload();
 // fileDelete();
 // fileEncrypt();
@@ -29,7 +29,7 @@ const keyring = new Keyring(config);
 
 // fileUploadWithTxHash().then(console.log,console.log);
 // fileDeleteWithTxHash().then(console.log,console.log);
-expansionWithTxHash().then(console.log,console.log);
+// expansionWithTxHash().then(console.log,console.log);
 
 function findPrice() {
   api.findPrice().then(console.log, console.log);
@@ -91,64 +91,46 @@ function fileDecrypt() {
     .fileDecrypt(filePath, newFilePath, privatekey)
     .then((t) => console.log("decrypt sucess!"), console.error);
 }
-
-async function fileUploadWithTxHash() {
+async function getFileUploadTxHash() {
   const filePath = "./file/a.zip";
   const privatekey = "123456";
   const backups = 1;
   const downloadfee = 0;
-  const { filehash, filename, filesize } = getFileInfo(filePath);
-  const ispublic = privatekey ? false : true;
-  const txAPI=api.api;
-
-  await txAPI.isReady;
-  const pair = keyring.createFromUri(mnemonic);
-  const fileid = short.generate();
-  const tx = txAPI.tx.fileBank.upload(
-    pair.address,
-    filename,
-    fileid,
-    filehash,
-    ispublic,
-    backups,
-    filesize,
-    downloadfee
-  );
-  const txHash =await api.sign(mnemonic, tx);
-  console.log('txHash',txHash);
+  return api.getFileUploadTxHash(mnemonic, filePath, backups, downloadfee, privatekey);
+}
+async function fileUploadWithTxHash() {
+  const { txHash, filePath, fileid, privatekey } = await getFileUploadTxHash();
   // return;
   api
     .fileUploadWithTxHash(txHash, filePath, fileid, privatekey)
     .then(console.log, console.error);
 }
+async function getFileDeleteTxHash() {
+  try {
+    return api.getFileDeleteTxHash(mnemonic, fileid);
+  } catch (error) {
+    console.error(error);
+  }
+}
 async function fileDeleteWithTxHash() {
   try {
-    const txAPI=api.api;
-    await txAPI.isReady;
-    const tx = txAPI.tx.fileBank.deleteFile(fileId);    
-    const txHash =await api.sign(mnemonic, tx);
-    console.log('txHash',txHash);
-    const hash =await api.fileDeleteWithTxHash(txHash);
+    const txHash =await getFileDeleteTxHash();
+    const hash = await api.fileDeleteWithTxHash(txHash);
     console.log(hash);
   } catch (error) {
     console.error(error);
   }
 }
-async function expansionWithTxHash() {
+async function getExpansionTxHash() {
   const spaceCount = 1;
   const leaseCount = 1;
   const maxPrice = 0;
+  return api.getExpansionTxHash(mnemonic, spaceCount, leaseCount, maxPrice);
+}
+async function expansionWithTxHash() {
   try {
-    const txAPI=api.api;
-    await txAPI.isReady;
-    const tx = txAPI.tx.fileBank.buySpace(
-      spaceCount,
-      leaseCount,
-      maxPrice
-    );
-    const txHash =await api.sign(mnemonic, tx);
-    console.log('txHash',txHash);
-    const hash =await api.expansionTxHash(txHash);
+    const txHash = await getExpansionTxHash();
+    const hash = await api.expansionTxHash(txHash);
     console.log(hash);
   } catch (error) {
     console.error(error);

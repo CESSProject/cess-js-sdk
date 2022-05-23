@@ -24,10 +24,13 @@ function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
     let i = 0;
     for (wsUrl of wsUrls) {
       try {
-        // console.log("try connect to ", wsUrl);
+        console.log("try connect to ", wsUrl);
+        let protoFilePath= "ws.proto";
+        protoFilePath=path.join(__dirname,protoFilePath);
+        console.log('protoFilePath',protoFilePath);
         let result= await wsproto.init(
           wsUrl,
-          "./src/file-process/ws.proto",
+          protoFilePath,
           "ReqMsgUpload",
           "RespMsg"
         );
@@ -69,6 +72,8 @@ function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
             data: buf,
           },
         };
+        // console.log('***************payload********************');
+        // console.log(payload);
         let res = await wsproto.request(payload);
         if (showProgressBar) {
           progressBar.tick(buf.length);

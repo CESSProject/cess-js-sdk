@@ -99,6 +99,33 @@ module.exports = class FileStorage extends ControlBase {
       // resolve(ips);
     });
   }
+  // async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       const { txHash, fileid } =
+  //         await this.getFileUploadTxHash(
+  //           mnemonic,
+  //           filePath,
+  //           backups,
+  //           downloadfee,
+  //           privatekey
+  //         );
+  //       if (!txHash) {
+  //         return reject();
+  //       }
+  //       let transfterHash = await this.fileUploadWithTxHash(
+  //         txHash,
+  //         filePath,
+  //         fileid,
+  //         privatekey
+  //       );
+  //       resolve(fileid);
+  //     } catch (e) {
+  //       this.error(e);
+  //       return reject(e);
+  //     }
+  //   });
+  // }
   async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
     return new Promise(async (resolve, reject) => {
       const that = this;
@@ -243,44 +270,76 @@ module.exports = class FileStorage extends ControlBase {
   async expansion(mnemonic, spaceCount, leaseCount, maxPrice) {
     return new Promise(async (resolve, reject) => {
       try {
-        await this.api.isReady;
-        const pair = this.keyring.createFromUri(mnemonic);
-        const extrinsic = this.api.tx.fileBank.buySpace(
+        let txtHash = await this.getExpansionTxHash(
+          mnemonic,
           spaceCount,
           leaseCount,
           maxPrice
         );
-        const extrinsicHash = extrinsic.hash.toHex();
-        const unsub = await extrinsic.signAndSend(pair, (result) => {
-          if (result.status.isInBlock || result.status.isFinalized) {
-            if (!result.dispatchInfo) {
-              return "Cannot get `dispatchInfo` from the result.";
-            }
-            // this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
-            unsub();
-            // return extrinsicHash;
-            resolve(extrinsicHash);
-          } else if (result.status.isDropped) {
-            unsub();
-            reject("isDropped");
-          } else if (result.status.isFinalityTimeout) {
-            unsub();
-            reject(
-              `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
-            );
-          } else if (result.isError) {
-            unsub();
-            reject(result.toHuman());
-          } else {
-            this.log(result.toHuman());
-          }
-        });
+        if (!txtHash) {
+          return reject();
+        }
+        let transfterHash = await this.expansionWithTxHash(txtHash);
+        resolve(transfterHash);
       } catch (e) {
         this.error(e);
-        return e;
+        return reject(e);
       }
     });
   }
+  async fileDelete(mnemonic, fileid) {
+    try {
+      let txtHash = await this.getFileDeleteTxHash(mnemonic, fileid);
+      if (!txtHash) {
+        return;
+      }
+      let transfterHash = await this.fileDeleteWithTxHash(txtHash);
+      return transfterHash;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  // async expansion(mnemonic, spaceCount, leaseCount, maxPrice) {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       await this.api.isReady;
+  //       const pair = this.keyring.createFromUri(mnemonic);
+  //       const extrinsic = this.api.tx.fileBank.buySpace(
+  //         spaceCount,
+  //         leaseCount,
+  //         maxPrice
+  //       );
+  //       const extrinsicHash = extrinsic.hash.toHex();
+  //       const unsub = await extrinsic.signAndSend(pair, (result) => {
+  //         if (result.status.isInBlock || result.status.isFinalized) {
+  //           if (!result.dispatchInfo) {
+  //             return "Cannot get `dispatchInfo` from the result.";
+  //           }
+  //           // this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+  //           unsub();
+  //           // return extrinsicHash;
+  //           resolve(extrinsicHash);
+  //         } else if (result.status.isDropped) {
+  //           unsub();
+  //           reject("isDropped");
+  //         } else if (result.status.isFinalityTimeout) {
+  //           unsub();
+  //           reject(
+  //             `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
+  //           );
+  //         } else if (result.isError) {
+  //           unsub();
+  //           reject(result.toHuman());
+  //         } else {
+  //           this.log(result.toHuman());
+  //         }
+  //       });
+  //     } catch (e) {
+  //       this.error(e);
+  //       return e;
+  //     }
+  //   });
+  // }
   // async buySpace(mnemonic, spaceCount, leaseCount, maxPrice) {
   //   try {
   //     await this.api.isReady;
@@ -296,17 +355,17 @@ module.exports = class FileStorage extends ControlBase {
   //     console.error(error);
   //   }
   // }
-  async fileDelete(mnemonic, fileid) {
-    try {
-      await this.api.isReady;
-      const tx = this.api.tx.fileBank.deleteFile(fileid);
-      await this.sign(mnemonic, tx);
-      const hash = await this.submitTransaction(tx.toHex());
-      return hash;
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  // async fileDelete(mnemonic, fileid) {
+  //   try {
+  //     await this.api.isReady;
+  //     const tx = this.api.tx.fileBank.deleteFile(fileid);
+  //     await this.sign(mnemonic, tx);
+  //     const hash = await this.submitTransaction(tx.toHex());
+  //     return hash;
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
   // async deleteFile(mnemonic, fileid) {
   //   return new Promise(async (resolve, reject) => {
   //     try {
@@ -352,6 +411,63 @@ module.exports = class FileStorage extends ControlBase {
     const fileCrypt = new FileCrypt(privatekey);
     return fileCrypt.decrypt(filePath, newFilePath);
   }
+
+  async getFileUploadTxHash(
+    mnemonic,
+    filePath,
+    backups,
+    downloadfee,
+    privatekey
+  ) {
+    try {
+      const { filehash, filename, filesize } = getFileInfo(filePath);
+      const ispublic = privatekey ? false : true;
+      const txAPI = this.api;
+
+      await txAPI.isReady;
+      const pair = this.keyring.createFromUri(mnemonic);
+      const fileid = short.generate();
+      const tx = txAPI.tx.fileBank.upload(
+        pair.address,
+        filename,
+        fileid,
+        filehash,
+        ispublic,
+        backups,
+        filesize,
+        downloadfee
+      );
+      const txHash = await this.sign(mnemonic, tx);
+      return { txHash, fileid, filePath, privatekey };
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+  async getFileDeleteTxHash(mnemonic, fileid) {
+    try {
+      const txAPI = this.api;
+      await txAPI.isReady;
+      const tx = txAPI.tx.fileBank.deleteFile(fileid);
+      const txHash = await this.sign(mnemonic, tx);
+      return txHash;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+  async getExpansionTxHash(mnemonic, spaceCount, leaseCount, maxPrice) {
+    try {
+      const txAPI = this.api;
+      await txAPI.isReady;
+      const tx = txAPI.tx.fileBank.buySpace(spaceCount, leaseCount, maxPrice);
+      const txHash = await this.sign(mnemonic, tx);
+      return txHash;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   async fileUploadWithTxHash(txHash, filePath, fileid, privatekey) {
     return new Promise(async (resolve, reject) => {
       const that = this;
@@ -393,7 +509,7 @@ module.exports = class FileStorage extends ControlBase {
   async fileDeleteWithTxHash(txHash) {
     return this.submitTransaction(txHash);
   }
-  async expansionTxHash(txHash) {
+  async expansionWithTxHash(txHash) {
     return this.submitTransaction(txHash);
   }
 };

@@ -4,9 +4,9 @@ message uploadBody {
   string  file_id = 1;
   string  file_hash = 2;
   string  backups = 3;
-  int32   blocks = 4;
-  int32   block_size=5;
-  int32   block_num=6;
+  int32   blockTotal = 4;
+  int32   blockSize=5;
+  int32   blockIndex=6;
   bytes   data=7;
 }
 
@@ -29,7 +29,7 @@ message ReqMsgDownload {
 message downloadBody{
   string  file_id=1;
   string  walletAddress=2;
-  int32   blocks=3;
+  int32   blockTotal=3;
 }
 
 
