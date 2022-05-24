@@ -9,12 +9,12 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "kidUz9HaFGwDxXu4gDcrz8";
+let fileId = "1My52sjDJbR3yTtRoXfPQZ";
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
 
-findPrice();
+// findPrice();
 // findPurchasedSpace();
 // expansion();
 
@@ -22,7 +22,7 @@ findPrice();
 // findFileList();
 
 // fileUpload();
-// fileDownload();
+fileDownload();
 // fileDelete();
 // fileEncrypt();
 // fileDecrypt();
@@ -50,14 +50,14 @@ function fileUpload() {
     backups = 1,
     downloadfee = 0;
   api
-    .fileUpload(mnemonic, filePath, backups, downloadfee, privatekey)
+    .fileUpload(mnemonic, filePath, backups, downloadfee, null)
     .then(console.log, console.error);
 }
 function fileDownload() {
   const fileSaveDir = "./file/down/";
   const privatekey = "123456";
   //mnemonic, fileId, fileSaveDir, privatekey
-  api.fileDownload(fileId, fileSaveDir, privatekey).then(console.log, (e) => {
+  api.fileDownload(fileId, fileSaveDir, null).then(console.log, (e) => {
     console.error(e);
     if (e == "The file has not been backed up") {
       setTimeout(fileDownload, 3000);

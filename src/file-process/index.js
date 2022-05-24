@@ -113,6 +113,7 @@ function download(
       "RespMsg"
     );
     let i = 0;
+    log('downloading....');
     while (!isFinish) {
       try {
         i++;
@@ -129,7 +130,7 @@ function download(
           },
         };
         let json = await wsproto.request(payload);
-        // log(json);
+        
         if (
           json.body.msg &&
           json.body.msg == "success" &&
@@ -171,6 +172,7 @@ function download(
         return reject(e);
       }
     }
+    log('download finish');
     await fileSlice.joinBlcoksToFile(newFilePath, bufs);
     log("complete");
     resolve();
