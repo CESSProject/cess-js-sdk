@@ -164,7 +164,7 @@ module.exports = class FileStorage extends ControlBase {
         );
         const fileHash = md5File.sync(fileSavePath);
         if (fileHash != fileInfo.fileHash) {
-          fs.unlinkSync(fileSavePath);
+          // fs.unlinkSync(fileSavePath);
           return reject("fileHash not equal.");
         }
         if (!fileInfo.public && privatekey) {
@@ -309,7 +309,7 @@ module.exports = class FileStorage extends ControlBase {
 
         const hash = await this.submitTransaction(txHash);
         this.log("transaction success hash:", hash);
-        return upload(filePath, fileid, filehash, wsURLs, true, that.log).then(
+        upload(filePath, fileid, filehash, wsURLs, true, that.log).then(
           resolve,
           reject
         );
