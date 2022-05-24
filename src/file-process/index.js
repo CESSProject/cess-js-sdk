@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const ProgressBar = require("color-progress-bar");
 const wsproto = new WsProto();
+const protoFilePath =  path.join(__dirname, "ws.proto");
 
 module.exports = { upload, download, getFileInfo };
 
@@ -25,10 +26,7 @@ function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
     for (wsUrl of wsUrls) {
       try {
         console.log("try connect to ", wsUrl);
-        let protoFilePath= "ws.proto";
-        protoFilePath=path.join(__dirname,protoFilePath);
-        console.log('protoFilePath',protoFilePath);
-        let result= await wsproto.init(
+        let result = await wsproto.init(
           wsUrl,
           protoFilePath,
           "ReqMsgUpload",
@@ -41,7 +39,6 @@ function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
         console.log(wsUrl, "close", e);
       }
     }
-    console.log('+++++++++++++++');
     let progressBar;
     if (showProgressBar) {
       progressBar = new ProgressBar(
@@ -108,12 +105,12 @@ function download(
     let blockIndex = 1;
     await wsproto.init(
       wsUrl,
-      "./src/file-process/ws.proto",
+      protoFilePath,
       "ReqMsgDownload",
       "RespMsg"
     );
     let i = 0;
-    log('downloading....');
+    log("downloading....");
     while (!isFinish) {
       try {
         i++;
@@ -130,7 +127,7 @@ function download(
           },
         };
         let json = await wsproto.request(payload);
-        
+
         if (
           json.body.msg &&
           json.body.msg == "success" &&
@@ -172,7 +169,7 @@ function download(
         return reject(e);
       }
     }
-    log('download finish');
+    log("download finish");
     await fileSlice.joinBlcoksToFile(newFilePath, bufs);
     log("complete");
     resolve();
