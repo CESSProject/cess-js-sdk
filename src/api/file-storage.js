@@ -150,34 +150,35 @@ module.exports = class FileStorage extends ControlBase {
         that.log("fileInfo", fileInfo);
         // const wsURL =this.getIP(fileInfo.fileDupl,'minerIp',true);
         let fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
-        const wsURL = await this.findSchedulerIPs(1);
-        that.log(wsURL);
+        const wsURLs = await this.findSchedulerIPs();
+        that.log(wsURLs);
         // this.log('mnemonic.address',mnemonic.address);
         await download(
           fileInfo.userAddr,
           fileSavePath,
           fileId,
           fileInfo.fileHash,
-          wsURL,
+          wsURLs,
           true,
           that.log
-        );
-        const fileHash = md5File.sync(fileSavePath);
-        if (fileHash != fileInfo.fileHash) {
-          // fs.unlinkSync(fileSavePath);
-          return reject("fileHash not equal.");
-        }
-        if (!fileInfo.public && privatekey) {
-          // fs.renameSync(fileSavePath, fileSavePath + ".crypt");
-          const newFilePath = fileSavePath.replace(".crypt", "");
+        );        
+        if (!fileInfo.public && privatekey) {          
+          const newFilePath = fileSavePath;
+          const oldFilePath=fileSavePath + ".crypt";
+          fs.renameSync(fileSavePath, oldFilePath);
           try {
-            await new FileCrypt(privatekey).decrypt(fileSavePath, newFilePath);
-            fs.unlinkSync(fileSavePath);
+            await new FileCrypt(privatekey).decrypt(oldFilePath, newFilePath);
+            fs.unlinkSync(oldFilePath);
             fileSavePath = newFilePath;
           } catch (err) {
             that.log(err);
             // fs.renameSync(fileSavePath + ".crypt", fileSavePath);
           }
+        }
+        const fileHash = md5File.sync(fileSavePath);
+        if (fileHash != fileInfo.fileHash) {
+          // fs.unlinkSync(fileSavePath);
+          return reject("fileHash not equal.");
         }
         resolve(fileSavePath);
       } catch (e) {
@@ -300,6 +301,7 @@ module.exports = class FileStorage extends ControlBase {
           );
           filePath += ".crypt";
         }
+        console.log('filePath',filePath,'******************************');
         const { filehash } = getFileInfo(filePath);
         await this.api.isReady;
         const wsURLs = await this.findSchedulerIPs();

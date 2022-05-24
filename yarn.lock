@@ -1657,18 +1657,18 @@
   "resolved" "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-3.0.1.tgz"
   "version" "3.0.1"
 
-"websocket-grpc@^1.1.4":
-  "integrity" "sha512-fyrBmMH71PTSd5vv21s8occj4r0XXUWw6fDJkN+v3auEjrhudljeyYehONtIcDlVMHoVO8SRWyYipfMSacx1OA=="
-  "resolved" "https://registry.npmjs.org/websocket-grpc/-/websocket-grpc-1.1.4.tgz"
-  "version" "1.1.4"
+"websocket-grpc@^1.1.5":
+  "integrity" "sha512-mlF0Uz9W35E0z+j/fCH/cpoYiefqA+BCo+xl5H0MmhmkC1VU6FQL3iumUOJhB2pYVvjBIi7EzTxH94CWQP9n5g=="
+  "resolved" "https://registry.npmjs.org/websocket-grpc/-/websocket-grpc-1.1.5.tgz"
+  "version" "1.1.5"
   dependencies:
     "protobufjs" "^6.11.2"
-    "websocket-request" "^1.2.1"
+    "websocket-request" "^1.2.2"
 
-"websocket-request@^1.2.1":
-  "integrity" "sha512-/K+IxYfrps1CUmD3Ax3G1VdaKGlu+JN4fyoR4XPDGtRlB/OgOPTFG/KrqrjsATP+AkGnmW8vMbXM9H9/ud1eCA=="
-  "resolved" "https://registry.npmjs.org/websocket-request/-/websocket-request-1.2.1.tgz"
-  "version" "1.2.1"
+"websocket-request@^1.2.2":
+  "integrity" "sha512-l67QCChNO/YGgr9mZULFMnJlDmuNjvq4h6sWv4gJu4gQLoUjyBU0O3fNz+Bwzr6DlSxYVHMSRUXtCJ91kpPj8A=="
+  "resolved" "https://registry.npmjs.org/websocket-request/-/websocket-request-1.2.2.tgz"
+  "version" "1.2.2"
   dependencies:
     "ws" "^8.6.0"
 

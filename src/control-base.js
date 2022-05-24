@@ -39,7 +39,7 @@ module.exports = class ControlBase {
     if (ips.length == 0) {
       return null;
     }
-    this.log("ips", ips);
+    // this.log("ips", ips);
     if (onlyone) {
       return ips[0];
     }

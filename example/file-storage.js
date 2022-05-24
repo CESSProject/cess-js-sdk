@@ -9,7 +9,7 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "oCbAHfGuTvSPRq4hksTN4c";
+let fileId = "gD5fndjCCuBPRLiPQvg8jh";
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
