@@ -301,7 +301,6 @@ module.exports = class FileStorage extends ControlBase {
           );
           filePath += ".crypt";
         }
-        console.log('filePath',filePath,'******************************');
         const { filehash } = getFileInfo(filePath);
         await this.api.isReady;
         const wsURLs = await this.findSchedulerIPs();
