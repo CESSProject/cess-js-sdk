@@ -9,7 +9,7 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "gD5fndjCCuBPRLiPQvg8jh";
+let fileId = "jDcToNQm6HigBjmMpfGeqy"; //'a9kW49VMLYCb6rXdnew8XT';// "1KUbrZA7t2ZAm7bd7ba54j";gRigXDFtWRfUayBybnzwci
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
@@ -21,8 +21,11 @@ const keyring = new Keyring(config);
 // findFile();
 // findFileList();
 
-// fileUpload();
-fileDownload();
+const isEncrypt=false;
+// const isEncrypt=true;
+
+// fileUpload(isEncrypt);
+// fileDownload(isEncrypt);
 // fileDelete();
 // fileEncrypt();
 // fileDecrypt();
@@ -30,7 +33,6 @@ fileDownload();
 // fileUploadWithTxHash().then(console.log,console.log);
 // fileDeleteWithTxHash().then(console.log,console.log);
 // expansionWithTxHash().then(console.log,console.log);
-
 
 function findPrice() {
   api.findPrice().then(console.log, console.log);
@@ -44,18 +46,18 @@ function findFile() {
 function findFileList() {
   api.findFileList(walletAddress).then(console.log, console.log);
 }
-function fileUpload() {
+function fileUpload(isEncrypt) {
   const filePath = "./file/a.zip";
-  const privatekey = "123456",
-    backups = 1,
-    downloadfee = 0;
+  const privatekey = isEncrypt?"123456":null;
+  const backups = 1;
+  const downloadfee = 0;
   api
     .fileUpload(mnemonic, filePath, backups, downloadfee, privatekey)
     .then(console.log, console.error);
 }
-function fileDownload() {
+function fileDownload(isEncrypt) {
   const fileSaveDir = "./file/down/";
-  const privatekey = "123456";
+  const privatekey = isEncrypt?"123456":null;
   //mnemonic, fileId, fileSaveDir, privatekey
   api.fileDownload(fileId, fileSaveDir, privatekey).then(console.log, (e) => {
     console.error(e);
@@ -85,8 +87,8 @@ function fileEncrypt() {
     .then((t) => console.log("encrypt sucess!"), console.error);
 }
 function fileDecrypt() {
-  let filePath = "./example/package.json.cess",
-    newFilePath = "./example/package.json",
+  let filePath = "./file/a.exe.crypt",
+    newFilePath = "./file/a2.exe",
     privatekey = "123456";
   api
     .fileDecrypt(filePath, newFilePath, privatekey)
@@ -97,7 +99,13 @@ async function getFileUploadTxHash() {
   const privatekey = "123456";
   const backups = 1;
   const downloadfee = 0;
-  return api.getFileUploadTxHash(mnemonic, filePath, backups, downloadfee, privatekey);
+  return api.getFileUploadTxHash(
+    mnemonic,
+    filePath,
+    backups,
+    downloadfee,
+    privatekey
+  );
 }
 async function fileUploadWithTxHash() {
   const { txHash, filePath, fileid, privatekey } = await getFileUploadTxHash();
@@ -115,7 +123,7 @@ async function getFileDeleteTxHash() {
 }
 async function fileDeleteWithTxHash() {
   try {
-    const txHash =await getFileDeleteTxHash();
+    const txHash = await getFileDeleteTxHash();
     const hash = await api.fileDeleteWithTxHash(txHash);
     console.log(hash);
   } catch (error) {

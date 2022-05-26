@@ -29,7 +29,7 @@ message ReqMsgDownload {
 message downloadBody{
   string  file_id=1;
   string  walletAddress=2;
-  int32   blockTotal=3;
+  int32   blockIndex=3;
 }
 
 

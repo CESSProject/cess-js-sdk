@@ -161,16 +161,32 @@ module.exports = class FileStorage extends ControlBase {
           wsURLs,
           true,
           that.log
-        );        
-        if (!fileInfo.public && privatekey) {          
-          const newFilePath = fileSavePath;
-          const oldFilePath=fileSavePath + ".crypt";
-          fs.renameSync(fileSavePath, oldFilePath);
-          try {
-            await new FileCrypt(privatekey).decrypt(oldFilePath, newFilePath);
-            fs.unlinkSync(oldFilePath);
+        );  
+        if(true){
+          const {filehash}=getFileInfo(fileSavePath);
+          console.log('download source file hash:',filehash);
+        }      
+        if (!fileInfo.public && privatekey) {  
+          // that.log('start decode file...');
+          const newFilePath = fileSavePath+'.decrypt';
+          // const oldFilePath=fileSavePath + ".crypt";
+          // fs.renameSync(fileSavePath, oldFilePath);
+          // if(!fs.existsSync(oldFilePath)){
+          //   return resolve('file not found');
+          // }
+          try {           
+            
+            const crypt=new FileCrypt(privatekey);
+            await crypt.decrypt(fileSavePath, newFilePath);
+            // fs.unlinkSync(oldFilePath);
             fileSavePath = newFilePath;
+            that.log('decode success.');
+            if(true){
+              const {filehash}=getFileInfo(newFilePath);
+              console.log('decrypt file hash:',filehash);
+            }
           } catch (err) {
+            that.log('decode err...');
             that.log(err);
             // fs.renameSync(fileSavePath + ".crypt", fileSavePath);
           }
@@ -178,7 +194,7 @@ module.exports = class FileStorage extends ControlBase {
         const fileHash = md5File.sync(fileSavePath);
         if (fileHash != fileInfo.fileHash) {
           // fs.unlinkSync(fileSavePath);
-          return reject("fileHash not equal.");
+          return reject("fileHash not equal.chain hash="+fileInfo.fileHash+',but local file hash='+fileHash);
         }
         resolve(fileSavePath);
       } catch (e) {
@@ -237,6 +253,7 @@ module.exports = class FileStorage extends ControlBase {
   ) {
     try {
       const { filehash, filename, filesize } = getFileInfo(filePath);
+      console.log('source file hash:',filehash);
       const ispublic = privatekey ? false : true;
       const txAPI = this.api;
 
@@ -302,6 +319,7 @@ module.exports = class FileStorage extends ControlBase {
           filePath += ".crypt";
         }
         const { filehash } = getFileInfo(filePath);
+        console.log('the hash of encrypt:',filehash,filePath);
         await this.api.isReady;
         const wsURLs = await this.findSchedulerIPs();
 

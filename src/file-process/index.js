@@ -125,11 +125,14 @@ function download(
             walletAddress: walletAddress,
             fileId: fileId,
             fileHash: fileHash,
-            blockTotal,
+            blockIndex,
           },
         };
+        // log('ws req json:');
+        // log(payload);
         let json = await wsproto.request(payload);
-
+        // log('ws res json:');
+        // log(json);
         if (
           json.body.msg &&
           json.body.msg == "success" &&
