@@ -19,8 +19,12 @@ function getFileInfo(filePath) {
 
 function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
   return new Promise(async (resolve, reject) => {
-    const buffInfoArray = fileSlice.getSliceInfoArr(sourFilePath, 2097152); // max length 2MB  = 2097152
-    const totleSize = buffInfoArray[buffInfoArray.length - 1].end;
+    const totleSize = fs.statSync(sourFilePath).size;
+    let blockSize=102400;
+    if(totleSize>209715200){
+      blockSize=2097152;
+    }
+    const buffInfoArray = fileSlice.getSliceInfoArr(sourFilePath, blockSize); // max length 2MB  = 2097152  kb
     log(buffInfoArray);
     let i = 0;
     for (wsUrl of wsUrls) {

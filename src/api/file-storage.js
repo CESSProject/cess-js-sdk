@@ -161,11 +161,7 @@ module.exports = class FileStorage extends ControlBase {
           wsURLs,
           true,
           that.log
-        );  
-        if(true){
-          const {filehash}=getFileInfo(fileSavePath);
-          console.log('download source file hash:',filehash);
-        }      
+        );   
         if (!fileInfo.public && privatekey) {  
           // that.log('start decode file...');
           const newFilePath = fileSavePath+'.decrypt';
@@ -178,13 +174,9 @@ module.exports = class FileStorage extends ControlBase {
             
             const crypt=new FileCrypt(privatekey);
             await crypt.decrypt(fileSavePath, newFilePath);
-            // fs.unlinkSync(oldFilePath);
-            fileSavePath = newFilePath;
+            fs.unlinkSync(fileSavePath);
+            fs.renameSync(newFilePath, fileSavePath);
             that.log('decode success.');
-            if(true){
-              const {filehash}=getFileInfo(newFilePath);
-              console.log('decrypt file hash:',filehash);
-            }
           } catch (err) {
             that.log('decode err...');
             that.log(err);
