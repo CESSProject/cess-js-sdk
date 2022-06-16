@@ -9,10 +9,13 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "9LiiknJ5qXHpCXa4QkV6UU"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
+let fileId = "qKCUTFNjpiecM2QNL9SHpD"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
+
+
+// console.log(api.api._rx.rpc.chain)
 
 // findPrice();
 // findPurchasedSpace();
@@ -25,7 +28,7 @@ const isEncrypt=true;
 // const isEncrypt=true;
 
 // fileUpload(isEncrypt);
-fileDownload(isEncrypt);
+// fileDownload(isEncrypt);
 // fileDelete();
 // fileEncrypt();
 // fileDecrypt();
