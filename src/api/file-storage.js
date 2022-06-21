@@ -104,12 +104,16 @@ module.exports = class FileStorage extends ControlBase {
   async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
     return new Promise(async (resolve, reject) => {
       try {
+        process.on('uncaughtException',function(e){
+          reject(e);
+        });
         const { txHash, fileid } =
           await this.getFileUploadTxHash(
             mnemonic,
             filePath,
             backups,
             downloadfee,
+            null,
             privatekey
           );
         if (!txHash) {
@@ -131,13 +135,16 @@ module.exports = class FileStorage extends ControlBase {
   async fileDownload(fileId, fileSaveDir, privatekey) {
     return new Promise(async (resolve, reject) => {
       const that = this;
+      process.on('uncaughtException',function(e){
+        reject(e);
+      });
       try {
         if (!fileId) {
           return reject("fileId is null");
         }
         if (!fileSaveDir) {
           return reject("fileSaveDir is null");
-        }
+        }        
         await this.api.isReady;
         const result = await this.api.query.fileBank.file(fileId);
         const fileInfo = result.toHuman();
@@ -163,15 +170,14 @@ module.exports = class FileStorage extends ControlBase {
           that.log
         );   
         if (!fileInfo.public && privatekey) {  
-          // that.log('start decode file...');
+          that.log('start decode file...',fileSavePath);
           const newFilePath = fileSavePath+'.decrypt';
           // const oldFilePath=fileSavePath + ".crypt";
           // fs.renameSync(fileSavePath, oldFilePath);
           // if(!fs.existsSync(oldFilePath)){
           //   return resolve('file not found');
           // }
-          try {           
-            
+          try {            
             const crypt=new FileCrypt(privatekey);
             await crypt.decrypt(fileSavePath, newFilePath);
             fs.unlinkSync(fileSavePath);
@@ -183,11 +189,16 @@ module.exports = class FileStorage extends ControlBase {
             // fs.renameSync(fileSavePath + ".crypt", fileSavePath);
           }
         }
-        const fileHash = md5File.sync(fileSavePath);
-        if (fileHash != fileInfo.fileHash) {
-          // fs.unlinkSync(fileSavePath);
-          return reject("fileHash not equal.chain hash="+fileInfo.fileHash+',but local file hash='+fileHash);
-        }
+        try{
+          that.log('start get md5 hash.');
+          const fileHash = md5File.sync(fileSavePath);
+          if (fileHash != fileInfo.fileHash) {
+            // fs.unlinkSync(fileSavePath);
+            return reject("fileHash not equal.chain hash="+fileInfo.fileHash+',but local file hash='+fileHash);
+          }
+        }catch(e){
+          that.log('check md5 error');
+        }       
         resolve(fileSavePath);
       } catch (e) {
         this.error(e);
@@ -241,6 +252,7 @@ module.exports = class FileStorage extends ControlBase {
     filePath,
     backups,
     downloadfee,
+    fileid,
     privatekey
   ) {
     try {
@@ -251,7 +263,9 @@ module.exports = class FileStorage extends ControlBase {
 
       await txAPI.isReady;
       const pair = this.keyring.createFromUri(mnemonic);
-      const fileid = short.generate();
+      if(!fileid){
+        fileid = short.generate();
+      }
       const tx = txAPI.tx.fileBank.upload(
         pair.address,
         filename,
