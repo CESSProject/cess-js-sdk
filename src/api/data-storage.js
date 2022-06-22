@@ -2,7 +2,7 @@ const ControlBase = require("../control-base");
 const short = require("short-uuid");
 const { getFileInfo } = require("../file-process");
 
-module.exports = class FileStorage extends ControlBase {
+module.exports = class DataStorage extends ControlBase {
   constructor(config) {
     super(config);
   }

@@ -18,7 +18,7 @@ const keyring = new Keyring(config);
 // console.log(api.api._rx.rpc.chain)
 
 // findPrice();
-// findPurchasedSpace();
+findPurchasedSpace();
 // expansion();
 
 // findFile();
