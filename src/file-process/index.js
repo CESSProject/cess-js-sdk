@@ -17,12 +17,21 @@ function getFileInfo(filePath) {
   };
 }
 
-function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
+function upload(
+  sourFilePath,
+  fileId,
+  fileHash,
+  wsUrls,
+  showProgressBar,
+  log,
+  progressLog
+) {
   return new Promise(async (resolve, reject) => {
+    progressLog(fileId, "slicing the file ");
     const totleSize = fs.statSync(sourFilePath).size;
-    let blockSize=102400;
-    if(totleSize>209715200){
-      blockSize=2097152;
+    let blockSize = 102400;
+    if (totleSize > 209715200) {
+      blockSize = 2097152;
     }
     const buffInfoArray = fileSlice.getSliceInfoArr(sourFilePath, blockSize); // max length 2MB  = 2097152  kb
     log(buffInfoArray);
@@ -30,8 +39,9 @@ function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
     for (wsUrl of wsUrls) {
       try {
         log("try connect to ", wsUrl);
+        progressLog(fileId, "try connect to " + wsUrl);
         await wsproto.init(wsUrl, protoFilePath, "ReqMsgUpload", "RespMsg");
-        if(wsproto.ws.wsIsOpen){
+        if (wsproto.ws.wsIsOpen) {
           break;
         }
       } catch (e) {
@@ -70,6 +80,9 @@ function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
         };
         // console.log('***************payload********************');
         // console.log(payload);
+        let per = parseInt((i * 100) / buffInfoArray.length);
+        progressLog(fileId, "uploading.... ", null, per);
+
         let res = await wsproto.request(payload);
         if (showProgressBar) {
           progressBar.tick(buf.length);
@@ -83,6 +96,7 @@ function upload(sourFilePath, fileId, fileHash, wsUrls, showProgressBar, log) {
         return reject(err);
       }
     }
+    progressLog(fileId, "upload complete!", fileId, 100, true);
     // log("upload complete!");
     resolve(fileId);
   });
@@ -95,7 +109,8 @@ function download(
   fileHash,
   wsUrls,
   showProgressBar,
-  log
+  log,
+  progressLog
 ) {
   return new Promise(async (resolve, reject) => {
     let isFinish = false;
@@ -105,9 +120,10 @@ function download(
 
     for (wsUrl of wsUrls) {
       try {
+        progressLog(fileId, "try connect to " + wsUrl);
         log("try connect to ", wsUrl);
         await wsproto.init(wsUrl, protoFilePath, "ReqMsgDownload", "RespMsg");
-        if(wsproto.ws.wsIsOpen){
+        if (wsproto.ws.wsIsOpen) {
           break;
         }
       } catch (e) {
@@ -116,6 +132,7 @@ function download(
     }
 
     let i = 0;
+    progressLog(fileId, "downloading.... from " + wsUrl);
     log("downloading....");
     while (!isFinish) {
       try {
@@ -147,6 +164,8 @@ function download(
           bufs.push(json.body.data.data);
           blockIndex = json.body.data.blockIndex;
           blockTotal = json.body.data.blockTotal;
+          let per = parseInt((blockIndex * 100) / blockTotal);
+          progressLog(fileId, "downloading.... ", null, per);
           // log("blockIndex:", blockIndex, "blockTotal:", blockTotal);
           if (showProgressBar) {
             if (i === 1) {
@@ -178,9 +197,11 @@ function download(
         return reject(e);
       }
     }
+    progressLog(fileId, "download finish and joining file with blocks.");
     log("download finish");
     await fileSlice.joinBlcoksToFile(newFilePath, bufs);
     log("complete");
+    progressLog(fileId, "join file complete.");
     resolve();
   });
 }

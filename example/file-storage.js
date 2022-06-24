@@ -9,26 +9,25 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "e2XKPjyeedt4ES6A5gG8Zx";//"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
+let fileId = "eRa1Hq9y1mzmDi9keRc8Ud"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
 
-
 // console.log(api.api._rx.rpc.chain)
 
 // findPrice();
-findPurchasedSpace();
+// findPurchasedSpace();
 // expansion();
 
 // findFile();
 // findFileList();
 
-const isEncrypt=true;
+const isEncrypt = false;
 // const isEncrypt=true;
 
 // fileUpload(isEncrypt);
-// fileDownload(isEncrypt);
+fileDownload(isEncrypt);
 // fileDelete();
 // fileEncrypt();
 // fileDecrypt();
@@ -51,7 +50,7 @@ function findFileList() {
 }
 function fileUpload(isEncrypt) {
   const filePath = "./file/a.txt";
-  const privatekey = isEncrypt?"123456":null;
+  const privatekey = isEncrypt ? "123456" : null;
   const backups = 1;
   const downloadfee = 0;
   api
@@ -60,15 +59,30 @@ function fileUpload(isEncrypt) {
 }
 function fileDownload(isEncrypt) {
   const fileSaveDir = "./file/down/";
-  const privatekey = isEncrypt?"123456":null;
+  const privatekey = isEncrypt ? "123456" : null;
   //mnemonic, fileId, fileSaveDir, privatekey
-  api.fileDownload(fileId, fileSaveDir, privatekey).then(console.log, (e) => {
-    console.error(e);
-    if (e == "The file has not been backed up") {
-      setTimeout(fileDownload, 3000);
-      console.log("Will retry after 3s.");
+  let lastMsg = "";
+  let timeout = setInterval(() => {
+    let msg = global[fileId];
+    if (lastMsg != msg) {
+      lastMsg = msg;
+      console.log(msg);
     }
-  });
+  }, 100);
+  api.fileDownload(fileId, fileSaveDir, privatekey).then(
+    (t) => {
+      console.log(t);
+      clearInterval(timeout);
+    },
+    (e) => {
+      clearInterval(timeout);
+      console.error(e);
+      if (e == "The file has not been backed up") {
+        setTimeout(fileDownload, 3000);
+        console.log("Will retry after 3s.");
+      }
+    }
+  );
 }
 function expansion() {
   let spaceCount = 1;
@@ -107,7 +121,7 @@ async function getFileUploadTxHash() {
     filePath,
     backups,
     downloadfee,
-    '',
+    "",
     privatekey
   );
 }

@@ -11,18 +11,26 @@ module.exports = class ControlBase {
     const apiObj = initApi(config);
     this.api = apiObj.api;
     this.keyring = apiObj.keyring;
-    this.debug=config.debug;
+    this.debug = config.debug;
   }
+  progressLog = (key, msg, data, per = 0, isComplete = false) => {
+    global[key] = {
+      msg,
+      per,
+      data,
+      isComplete,
+    };
+  };
   log = (...msg) => {
     if (this.debug) {
       console.log(...msg);
     }
-  }
+  };
   error = (...msg) => {
     if (this.debug) {
       console.error(...msg);
     }
-  }
+  };
   getIP(raw, protoName, onlyone) {
     if (raw.length == 0) {
       return null;

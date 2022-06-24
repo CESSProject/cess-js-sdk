@@ -104,18 +104,17 @@ module.exports = class FileStorage extends ControlBase {
   async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
     return new Promise(async (resolve, reject) => {
       try {
-        process.on('uncaughtException',function(e){
+        process.on("uncaughtException", function (e) {
           reject(e);
         });
-        const { txHash, fileid } =
-          await this.getFileUploadTxHash(
-            mnemonic,
-            filePath,
-            backups,
-            downloadfee,
-            null,
-            privatekey
-          );
+        const { txHash, fileid } = await this.getFileUploadTxHash(
+          mnemonic,
+          filePath,
+          backups,
+          downloadfee,
+          null,
+          privatekey
+        );
         if (!txHash) {
           return reject();
         }
@@ -131,11 +130,11 @@ module.exports = class FileStorage extends ControlBase {
         return reject(e);
       }
     });
-  }  
+  }
   async fileDownload(fileId, fileSaveDir, privatekey) {
     return new Promise(async (resolve, reject) => {
       const that = this;
-      process.on('uncaughtException',function(e){
+      process.on("uncaughtException", function (e) {
         reject(e);
       });
       try {
@@ -144,22 +143,38 @@ module.exports = class FileStorage extends ControlBase {
         }
         if (!fileSaveDir) {
           return reject("fileSaveDir is null");
-        }        
+        }
+        that.progressLog(fileId, "waiting websock ready...");
         await this.api.isReady;
+        that.progressLog(
+          fileId,
+          "websock isready,geting file info from chain..."
+        );
         const result = await this.api.query.fileBank.file(fileId);
+        that.progressLog(fileId, "load file info complete.");
         const fileInfo = result.toHuman();
         if (!fileInfo || !fileInfo.fileState) {
+          that.progressLog(fileId, "file not found.", null, 0, true);
           return reject("File not found.");
         }
         if (fileInfo.fileState != "active") {
+          that.progressLog(
+            fileId,
+            "the file has not been backed up",
+            null,
+            0,
+            true
+          );
           return reject("The file has not been backed up");
         }
         that.log("fileInfo", fileInfo);
         // const wsURL =this.getIP(fileInfo.fileDupl,'minerIp',true);
         let fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
+        that.progressLog(fileId, "waiting findSchedulerIPs.");
         const wsURLs = await this.findSchedulerIPs();
         that.log(wsURLs);
         // this.log('mnemonic.address',mnemonic.address);
+        that.progressLog(fileId, "start download...");
         await download(
           fileInfo.userAddr,
           fileSavePath,
@@ -167,38 +182,51 @@ module.exports = class FileStorage extends ControlBase {
           fileInfo.fileHash,
           wsURLs,
           true,
-          that.log
-        );   
-        if (!fileInfo.public && privatekey) {  
-          that.log('start decode file...',fileSavePath);
-          const newFilePath = fileSavePath+'.decrypt';
+          that.log,
+          that.progressLog
+        );
+        that.progressLog(fileId, "download complete");
+        if (!fileInfo.public && privatekey) {
+          that.log("start decode file...", fileSavePath);
+          const newFilePath = fileSavePath + ".decrypt";
           // const oldFilePath=fileSavePath + ".crypt";
           // fs.renameSync(fileSavePath, oldFilePath);
           // if(!fs.existsSync(oldFilePath)){
           //   return resolve('file not found');
           // }
-          try {            
-            const crypt=new FileCrypt(privatekey);
+          try {
+            that.progressLog(fileId, "decrypting...");
+            const crypt = new FileCrypt(privatekey);
             await crypt.decrypt(fileSavePath, newFilePath);
             fs.unlinkSync(fileSavePath);
             fs.renameSync(newFilePath, fileSavePath);
-            that.log('decode success.');
+            that.log("decode success.");
+            that.progressLog(fileId, "decode success.");
           } catch (err) {
-            that.log('decode err...');
+            that.log("decode err...");
             that.log(err);
             // fs.renameSync(fileSavePath + ".crypt", fileSavePath);
           }
         }
-        try{
-          that.log('start get md5 hash.');
+        try {
+          that.log("start get md5 hash.");
+          that.progressLog(fileId, "start get md5 hash.");
           const fileHash = md5File.sync(fileSavePath);
           if (fileHash != fileInfo.fileHash) {
             // fs.unlinkSync(fileSavePath);
-            return reject("fileHash not equal.chain hash="+fileInfo.fileHash+',but local file hash='+fileHash);
+            that.progressLog(fileId, "fileHash not equal.chain");
+            return reject(
+              "fileHash not equal.chain hash=" +
+                fileInfo.fileHash +
+                ",but local file hash=" +
+                fileHash
+            );
           }
-        }catch(e){
-          that.log('check md5 error');
-        }       
+        } catch (e) {
+          that.progressLog(fileId, "check md5 error");
+          that.log("check md5 error");
+        }
+        that.progressLog(fileId, "ok", fileSavePath, 0, true);
         resolve(fileSavePath);
       } catch (e) {
         this.error(e);
@@ -238,7 +266,7 @@ module.exports = class FileStorage extends ControlBase {
     } catch (error) {
       console.error(error);
     }
-  }  
+  }
   async fileEncrypt(filePath, newFilePath, privatekey) {
     const fileCrypt = new FileCrypt(privatekey);
     return fileCrypt.encrypt(filePath, newFilePath);
@@ -257,13 +285,13 @@ module.exports = class FileStorage extends ControlBase {
   ) {
     try {
       const { filehash, filename, filesize } = getFileInfo(filePath);
-      console.log('source file hash:',filehash);
+      console.log("source file hash:", filehash);
       const ispublic = privatekey ? false : true;
       const txAPI = this.api;
 
       await txAPI.isReady;
       const pair = this.keyring.createFromUri(mnemonic);
-      if(!fileid){
+      if (!fileid) {
         fileid = short.generate();
       }
       const tx = txAPI.tx.fileBank.upload(
@@ -311,33 +339,46 @@ module.exports = class FileStorage extends ControlBase {
       const that = this;
       try {
         if (!txHash) {
+          that.progressLog(fileid, "txHash is null", null, 0, true);
           throw "txHash is null";
         }
         if (!filePath) {
+          that.progressLog(fileid, "filePath is null", null, 0, true);
           throw "filePath is null";
         }
         let ispublic = privatekey ? false : true;
         if (!ispublic) {
+          that.progressLog(fileid, "encodeing the file...");
           await new FileCrypt(privatekey).encrypt(
             filePath,
             filePath + ".crypt"
           );
           filePath += ".crypt";
         }
+        that.progressLog(fileid, "get file info...");
         const { filehash } = getFileInfo(filePath);
-        console.log('the hash of encrypt:',filehash,filePath);
+        console.log("the hash of encrypt:", filehash, filePath);
+        that.progressLog(fileid, "waiting socket ready...");
         await this.api.isReady;
+        that.progressLog(fileid, "loading scheduler IPs...");
         const wsURLs = await this.findSchedulerIPs();
 
         this.log("fileid:", fileid);
         this.log("filehash:", filehash);
 
+        that.progressLog(fileid, "submit transactioning...");
         const hash = await this.submitTransaction(txHash);
         this.log("transaction success hash:", hash);
-        upload(filePath, fileid, filehash, wsURLs, true, that.log).then(
-          resolve,
-          reject
-        );
+        that.progressLog(fileid, "transaction success hash:" + hash);
+        upload(
+          filePath,
+          fileid,
+          filehash,
+          wsURLs,
+          true,
+          that.log,
+          that.progressLog
+        ).then(resolve, reject);
       } catch (e) {
         this.error("have error and break");
         this.error(e);
@@ -353,114 +394,110 @@ module.exports = class FileStorage extends ControlBase {
   }
 };
 
-
-
-
-
 // async expansion(mnemonic, spaceCount, leaseCount, maxPrice) {
-  //   return new Promise(async (resolve, reject) => {
-  //     try {
-  //       await this.api.isReady;
-  //       const pair = this.keyring.createFromUri(mnemonic);
-  //       const extrinsic = this.api.tx.fileBank.buySpace(
-  //         spaceCount,
-  //         leaseCount,
-  //         maxPrice
-  //       );
-  //       const extrinsicHash = extrinsic.hash.toHex();
-  //       const unsub = await extrinsic.signAndSend(pair, (result) => {
-  //         if (result.status.isInBlock || result.status.isFinalized) {
-  //           if (!result.dispatchInfo) {
-  //             return "Cannot get `dispatchInfo` from the result.";
-  //           }
-  //           // this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
-  //           unsub();
-  //           // return extrinsicHash;
-  //           resolve(extrinsicHash);
-  //         } else if (result.status.isDropped) {
-  //           unsub();
-  //           reject("isDropped");
-  //         } else if (result.status.isFinalityTimeout) {
-  //           unsub();
-  //           reject(
-  //             `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
-  //           );
-  //         } else if (result.isError) {
-  //           unsub();
-  //           reject(result.toHuman());
-  //         } else {
-  //           this.log(result.toHuman());
-  //         }
-  //       });
-  //     } catch (e) {
-  //       this.error(e);
-  //       return e;
-  //     }
-  //   });
-  // }
-  // async buySpace(mnemonic, spaceCount, leaseCount, maxPrice) {
-  //   try {
-  //     await this.api.isReady;
-  //     const tx = this.api.tx.fileBank.buySpace(
-  //       spaceCount,
-  //       leaseCount,
-  //       maxPrice
-  //     );
-  //     await this.sign(mnemonic, tx);
-  //     const hash = await this.submitTransaction(tx.toHex());
-  //     return hash;
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // }
-  // async fileDelete(mnemonic, fileid) {
-  //   try {
-  //     await this.api.isReady;
-  //     const tx = this.api.tx.fileBank.deleteFile(fileid);
-  //     await this.sign(mnemonic, tx);
-  //     const hash = await this.submitTransaction(tx.toHex());
-  //     return hash;
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // }
-  // async deleteFile(mnemonic, fileid) {
-  //   return new Promise(async (resolve, reject) => {
-  //     try {
-  //       await this.api.isReady;
-  //       const pair = this.keyring.createFromUri(mnemonic);
-  //       const extrinsic = this.api.tx.fileBank.deleteFile(fileid);
-  //       const extrinsicHash = extrinsic.hash.toHex();
-  //       const unsub = await extrinsic.signAndSend(pair, (result) => {
-  //         if (result.status.isInBlock || result.status.isFinalized) {
-  //           if (!result.dispatchInfo) {
-  //             return "Cannot get `dispatchInfo` from the result.";
-  //           }
-  //           this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
-  //           unsub();
-  //           // return extrinsicHash;
-  //           resolve(extrinsicHash);
-  //         } else if (result.status.isDropped) {
-  //           unsub();
-  //           reject("isDropped");
-  //         } else if (result.status.isFinalityTimeout) {
-  //           unsub();
-  //           reject(
-  //             `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
-  //           );
-  //         } else if (result.isError) {
-  //           unsub();
-  //           reject(result.toHuman());
-  //         } else {
-  //           this.log(result.toHuman());
-  //         }
-  //       });
-  //     } catch (e) {
-  //       this.error(e);
-  //       return e;
-  //     }
-  //   });
-  // }
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       await this.api.isReady;
+//       const pair = this.keyring.createFromUri(mnemonic);
+//       const extrinsic = this.api.tx.fileBank.buySpace(
+//         spaceCount,
+//         leaseCount,
+//         maxPrice
+//       );
+//       const extrinsicHash = extrinsic.hash.toHex();
+//       const unsub = await extrinsic.signAndSend(pair, (result) => {
+//         if (result.status.isInBlock || result.status.isFinalized) {
+//           if (!result.dispatchInfo) {
+//             return "Cannot get `dispatchInfo` from the result.";
+//           }
+//           // this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+//           unsub();
+//           // return extrinsicHash;
+//           resolve(extrinsicHash);
+//         } else if (result.status.isDropped) {
+//           unsub();
+//           reject("isDropped");
+//         } else if (result.status.isFinalityTimeout) {
+//           unsub();
+//           reject(
+//             `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
+//           );
+//         } else if (result.isError) {
+//           unsub();
+//           reject(result.toHuman());
+//         } else {
+//           this.log(result.toHuman());
+//         }
+//       });
+//     } catch (e) {
+//       this.error(e);
+//       return e;
+//     }
+//   });
+// }
+// async buySpace(mnemonic, spaceCount, leaseCount, maxPrice) {
+//   try {
+//     await this.api.isReady;
+//     const tx = this.api.tx.fileBank.buySpace(
+//       spaceCount,
+//       leaseCount,
+//       maxPrice
+//     );
+//     await this.sign(mnemonic, tx);
+//     const hash = await this.submitTransaction(tx.toHex());
+//     return hash;
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
+// async fileDelete(mnemonic, fileid) {
+//   try {
+//     await this.api.isReady;
+//     const tx = this.api.tx.fileBank.deleteFile(fileid);
+//     await this.sign(mnemonic, tx);
+//     const hash = await this.submitTransaction(tx.toHex());
+//     return hash;
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
+// async deleteFile(mnemonic, fileid) {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       await this.api.isReady;
+//       const pair = this.keyring.createFromUri(mnemonic);
+//       const extrinsic = this.api.tx.fileBank.deleteFile(fileid);
+//       const extrinsicHash = extrinsic.hash.toHex();
+//       const unsub = await extrinsic.signAndSend(pair, (result) => {
+//         if (result.status.isInBlock || result.status.isFinalized) {
+//           if (!result.dispatchInfo) {
+//             return "Cannot get `dispatchInfo` from the result.";
+//           }
+//           this.log("extrinsic suceess extrinsicHash:", extrinsicHash);
+//           unsub();
+//           // return extrinsicHash;
+//           resolve(extrinsicHash);
+//         } else if (result.status.isDropped) {
+//           unsub();
+//           reject("isDropped");
+//         } else if (result.status.isFinalityTimeout) {
+//           unsub();
+//           reject(
+//             `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
+//           );
+//         } else if (result.isError) {
+//           unsub();
+//           reject(result.toHuman());
+//         } else {
+//           this.log(result.toHuman());
+//         }
+//       });
+//     } catch (e) {
+//       this.error(e);
+//       return e;
+//     }
+//   });
+// }
 // async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
 //   return new Promise(async (resolve, reject) => {
 //     const that = this;
