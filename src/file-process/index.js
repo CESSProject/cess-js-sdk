@@ -6,12 +6,28 @@ const fs = require("fs");
 const ProgressBar = require("color-progress-bar");
 const wsproto = new WsProto();
 const protoFilePath = path.join(__dirname, "ws.proto");
+const hash = require("hash.js");
 
 module.exports = { upload, download, getFileInfo };
 
-function getFileInfo(filePath) {
+async function getFileInfo(filePath) {
+  const totleSize = fs.statSync(filePath).size;
+  const blockSize = 1073741824; //1G
+  let hashStr = "";
+  if (totleSize <= blockSize) {
+    hashStr = sha256(fs.readFileSync(filePath));
+  } else {
+    const buffInfoArray = fileSlice.getSliceInfoArr(filePath, blockSize);
+    for (const info of buffInfoArray) {
+      const buf = await fileSlice.readOneBlock(filePath, info);
+      let tmp = sha256(buf);
+      hashStr += tmp;
+    }
+  }
+  hashStr = sha256(hashStr);
   return {
-    filehash: md5File.sync(filePath),
+    filehash: hashStr,
+    fileId: "cess" + hashStr,
     filename: path.basename(filePath),
     filesize: fs.statSync(filePath).size,
   };

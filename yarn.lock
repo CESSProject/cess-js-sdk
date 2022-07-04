@@ -706,6 +706,16 @@
   "resolved" "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz"
   "version" "0.0.1"
 
+"convert-hex@~0.1.0":
+  "integrity" "sha512-w20BOb1PiR/sEJdS6wNrUjF5CSfscZFUp7R9NSlXH8h2wynzXVEPFPJECAnkNylZ+cvf3p7TyRUHggDmrwXT9A=="
+  "resolved" "https://registry.npmjs.org/convert-hex/-/convert-hex-0.1.0.tgz"
+  "version" "0.1.0"
+
+"convert-string@~0.1.0":
+  "integrity" "sha512-1KX9ESmtl8xpT2LN2tFnKSbV4NiarbVi8DVb39ZriijvtTklyrT+4dT1wsGMHKD3CJUjXgvJzstm9qL9ICojGA=="
+  "resolved" "https://registry.npmjs.org/convert-string/-/convert-string-0.1.0.tgz"
+  "version" "0.1.0"
+
 "d@^1.0.1", "d@1":
   "integrity" "sha512-m62ShEObQ39CfralilEQRjH6oAMtNCV1xJyEx5LpRYUVN+EviphDgUc/F3hnYbADmkiNs67Y+3ylmlG7Lnu+FA=="
   "resolved" "https://registry.npmjs.org/d/-/d-1.0.1.tgz"
@@ -873,10 +883,10 @@
     "combined-stream" "^1.0.8"
     "mime-types" "^2.1.12"
 
-"fs-slicer@^1.0.3":
-  "integrity" "sha512-he9tVcDXXoA2eD3m4jKN8B8y96gNrJJq9h3SgfWi1IjRwYjOLaMtiDl93q6NPNjN2fPgtPuJ8ewkyhbHsyTWjw=="
-  "resolved" "https://registry.npmjs.org/fs-slicer/-/fs-slicer-1.0.3.tgz"
-  "version" "1.0.3"
+"fs-slicer@^1.0.7":
+  "integrity" "sha512-V+dO4gmmDNX1yUxa2Jy1nPLKolnqG6xcp3s0P/8n2IKxZdhj+5Dl9o5VHpjuVPeXBVgQB97lfCkR2ygtpYAJeQ=="
+  "resolved" "https://registry.npmjs.org/fs-slicer/-/fs-slicer-1.0.7.tgz"
+  "version" "1.0.7"
   dependencies:
     "make-dir" "^3.1.0"
 
@@ -1477,6 +1487,14 @@
   "version" "6.0.0"
   dependencies:
     "randombytes" "^2.1.0"
+
+"sha256@^0.2.0":
+  "integrity" "sha512-kTWMJUaez5iiT9CcMv8jSq6kMhw3ST0uRdcIWl3D77s6AsLXNXRp3heeqqfu5+Dyfu4hwpQnMzhqHh8iNQxw0w=="
+  "resolved" "https://registry.npmjs.org/sha256/-/sha256-0.2.0.tgz"
+  "version" "0.2.0"
+  dependencies:
+    "convert-hex" "~0.1.0"
+    "convert-string" "~0.1.0"
 
 "short-uuid@^4.2.0":
   "integrity" "sha512-r3cxuPPZSuF0QkKsK9bBR7u+7cwuCRzWzgjPh07F5N2iIUNgblnMHepBY16xgj5t1lG9iOP9k/TEafY1qhRzaw=="
