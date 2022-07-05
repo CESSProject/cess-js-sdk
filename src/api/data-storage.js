@@ -9,7 +9,7 @@ module.exports = class DataStorage extends ControlBase {
 
   async getStoreTxHash(mnemonic, filePath, fileid, keyword) {
     try {
-      const { filehash, filename, filesize } = getFileInfo(filePath);
+      const { filehash, filename, filesize } =await getFileInfo(filePath);
       console.log("source file hash:", filehash);
       const txAPI = this.api;
 

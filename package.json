@@ -35,6 +35,7 @@
     "fs-slicer": "^1.0.7",
     "md5-file": "^5.0.0",
     "protobufjs": "^6.11.2",
+    "reedsolomon": "^1.0.0",
     "sha256": "^0.2.0",
     "short-uuid": "^4.2.0",
     "websocket-grpc": "^1.1.5"

@@ -1,5 +1,12 @@
+/*
+ * @Description: 
+ * @Autor: fage
+ * @Date: 2022-04-29 17:24:00
+ * @LastEditors: fage
+ * @LastEditTime: 2022-07-05 17:13:13
+ */
 const initApi = require("./init-api");
-const { uint8ArrayToIP } = require("./util");
+const { uint8ArrayToIP,base58ToIP } = require("./util");
 
 module.exports = class ControlBase {
   constructor(config) {
@@ -38,7 +45,7 @@ module.exports = class ControlBase {
     const ips = [];
     for (let r of raw) {
       try {
-        const ip = uint8ArrayToIP(r[protoName]);
+        const ip = base58ToIP(r[protoName]);
         ips.push("ws://" + ip);
       } catch (e) {
         this.log(e);

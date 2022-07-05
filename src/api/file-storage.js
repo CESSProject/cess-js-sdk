@@ -1,10 +1,12 @@
 const ControlBase = require("../control-base");
 const fs = require("fs");
+const util = require("../util");
 const path = require("path");
 const md5File = require("md5-file");
 const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
 const { getFileInfo, upload, download } = require("../file-process");
+const { u8aToHex } = require("@polkadot/util");
 
 module.exports = class FileStorage extends ControlBase {
   constructor(config) {
@@ -131,7 +133,7 @@ module.exports = class FileStorage extends ControlBase {
       }
     });
   }
-  async fileDownload(fileId, fileSaveDir, privatekey) {
+  async fileDownload(fileId, fileSaveDir) {
     return new Promise(async (resolve, reject) => {
       const that = this;
       process.on("uncaughtException", function (e) {
@@ -169,63 +171,24 @@ module.exports = class FileStorage extends ControlBase {
         }
         that.log("fileInfo", fileInfo);
         // const wsURL =this.getIP(fileInfo.fileDupl,'minerIp',true);
-        let fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName;
+        let fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName[0];
         that.progressLog(fileId, "waiting findSchedulerIPs.");
-        const wsURLs = await this.findSchedulerIPs();
+
+        console.log('fileInfo.sliceInfo',fileInfo.sliceInfo);
+        const wsURLs = that.getIP(fileInfo.sliceInfo, "minerIp");
         that.log(wsURLs);
         // this.log('mnemonic.address',mnemonic.address);
         that.progressLog(fileId, "start download...");
         await download(
-          fileInfo.userAddr,
+          fileInfo.user[0],
           fileSavePath,
           fileId,
-          fileInfo.fileHash,
           wsURLs,
           true,
           that.log,
           that.progressLog
         );
         that.progressLog(fileId, "download complete");
-        if (!fileInfo.public && privatekey) {
-          that.log("start decode file...", fileSavePath);
-          const newFilePath = fileSavePath + ".decrypt";
-          // const oldFilePath=fileSavePath + ".crypt";
-          // fs.renameSync(fileSavePath, oldFilePath);
-          // if(!fs.existsSync(oldFilePath)){
-          //   return resolve('file not found');
-          // }
-          try {
-            that.progressLog(fileId, "decrypting...");
-            const crypt = new FileCrypt(privatekey);
-            await crypt.decrypt(fileSavePath, newFilePath);
-            fs.unlinkSync(fileSavePath);
-            fs.renameSync(newFilePath, fileSavePath);
-            that.log("decode success.");
-            that.progressLog(fileId, "decode success.");
-          } catch (err) {
-            that.log("decode err...");
-            that.log(err);
-            // fs.renameSync(fileSavePath + ".crypt", fileSavePath);
-          }
-        }
-        try {
-          that.log("start get md5 hash.");
-          that.progressLog(fileId, "start get md5 hash.");
-          const fileHash = md5File.sync(fileSavePath);
-          if (fileHash != fileInfo.fileHash) {
-            // fs.unlinkSync(fileSavePath);
-            that.progressLog(fileId, "fileHash not equal.chain");
-            return reject(
-              "fileHash not equal.chain hash=" +
-                fileInfo.fileHash +
-                ",but local file hash=" +
-                fileHash
-            );
-          }
-        } catch (e) {
-          that.progressLog(fileId, "check md5 error");
-          that.log("check md5 error");
-        }
         that.progressLog(fileId, "ok", fileSavePath, 0, true);
         resolve(fileSavePath);
       } catch (e) {
@@ -275,37 +238,14 @@ module.exports = class FileStorage extends ControlBase {
     const fileCrypt = new FileCrypt(privatekey);
     return fileCrypt.decrypt(filePath, newFilePath);
   }
-  async getFileUploadTxHash(
-    mnemonic,
-    filePath,
-    backups,
-    downloadfee,
-    fileid,
-    privatekey
-  ) {
+  async getFileUploadTxHash(mnemonic, filePath) {
     try {
-      const { filehash, filename, filesize } = getFileInfo(filePath);
-      console.log("source file hash:", filehash);
-      const ispublic = privatekey ? false : true;
+      let { fileId, filename } = await getFileInfo(filePath);
       const txAPI = this.api;
-
       await txAPI.isReady;
-      const pair = this.keyring.createFromUri(mnemonic);
-      if (!fileid) {
-        fileid = short.generate();
-      }
-      const tx = txAPI.tx.fileBank.upload(
-        pair.address,
-        filename,
-        fileid,
-        filehash,
-        ispublic,
-        backups,
-        filesize,
-        downloadfee
-      );
+      const tx = txAPI.tx.fileBank.uploadDeclaration(fileId, filename);
       const txHash = await this.sign(mnemonic, tx);
-      return { txHash, fileid, filePath, privatekey };
+      return { txHash, fileId, filePath };
     } catch (error) {
       console.error(error);
       return null;
@@ -334,7 +274,7 @@ module.exports = class FileStorage extends ControlBase {
       console.error(error);
     }
   }
-  async fileUploadWithTxHash(txHash, filePath, fileid, privatekey) {
+  async fileUploadWithTxHash(mnemonic, txHash, filePath, fileid) {
     return new Promise(async (resolve, reject) => {
       const that = this;
       try {
@@ -346,34 +286,32 @@ module.exports = class FileStorage extends ControlBase {
           that.progressLog(fileid, "filePath is null", null, 0, true);
           throw "filePath is null";
         }
-        let ispublic = privatekey ? false : true;
-        if (!ispublic) {
-          that.progressLog(fileid, "encodeing the file...");
-          await new FileCrypt(privatekey).encrypt(
-            filePath,
-            filePath + ".crypt"
-          );
-          filePath += ".crypt";
-        }
         that.progressLog(fileid, "get file info...");
-        const { filehash } = getFileInfo(filePath);
-        console.log("the hash of encrypt:", filehash, filePath);
         that.progressLog(fileid, "waiting socket ready...");
         await this.api.isReady;
         that.progressLog(fileid, "loading scheduler IPs...");
         const wsURLs = await this.findSchedulerIPs();
 
         this.log("fileid:", fileid);
-        this.log("filehash:", filehash);
 
         that.progressLog(fileid, "submit transactioning...");
         const hash = await this.submitTransaction(txHash);
         this.log("transaction success hash:", hash);
         that.progressLog(fileid, "transaction success hash:" + hash);
+        let u8arr = new Uint8Array([21, 31]);
+        console.log(u8arr);
+        let tmp=util.stringToByte('123');
+        console.log(tmp);
+        u8arr=tmp;
+        u8arr='123';
+        const { publicKey, signStr } = await that.authSign(mnemonic, u8arr);
+        this.log("signStr", signStr);
         upload(
           filePath,
           fileid,
-          filehash,
+          publicKey,
+          u8arr,
+          signStr,
           wsURLs,
           true,
           that.log,
@@ -391,6 +329,22 @@ module.exports = class FileStorage extends ControlBase {
   }
   async expansionWithTxHash(txHash) {
     return this.submitTransaction(txHash);
+  }
+  async authSign(mnemonic, msg) {
+    await this.api.isReady;
+    let kr = this.keyring;
+    const pair = kr.createFromUri(mnemonic);
+    kr.setSS58Format(11330);
+    const publicKey = pair.publicKey;
+    const ss58 = pair.address;
+    const signStr = pair.sign(msg);
+    return {
+      mnemonic,
+      msg,
+      publicKey,
+      signStr,
+      ss58,
+    };
   }
 };
 

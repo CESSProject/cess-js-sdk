@@ -9,7 +9,8 @@ const { getFileInfo, upload, download } = require("../src/file-process");
 const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-let fileId = "eRa1Hq9y1mzmDi9keRc8Ud"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
+let fileId =
+  "cess37edba7b46ea9396072788cbb475a0022d19506da149a4e8ec875c2058b8a057"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
@@ -23,18 +24,17 @@ const keyring = new Keyring(config);
 // findFile();
 // findFileList();
 
-const isEncrypt = false;
-// const isEncrypt=true;
-
-// fileUpload(isEncrypt);
-fileDownload(isEncrypt);
+// fileUpload().then(console.log,console.log);
+fileDownload();
 // fileDelete();
 // fileEncrypt();
 // fileDecrypt();
 
-// fileUploadWithTxHash().then(console.log,console.log);
+//
 // fileDeleteWithTxHash().then(console.log,console.log);
 // expansionWithTxHash().then(console.log,console.log);
+
+// getFileUploadTxHash().then(console.log,console.log);
 
 function findPrice() {
   api.findPrice().then(console.log, console.log);
@@ -48,28 +48,18 @@ function findFile() {
 function findFileList() {
   api.findFileList(walletAddress).then(console.log, console.log);
 }
-function fileUpload(isEncrypt) {
-  const filePath = "./file/a.txt";
-  const privatekey = isEncrypt ? "123456" : null;
-  const backups = 1;
-  const downloadfee = 0;
-  api
-    .fileUpload(mnemonic, filePath, backups, downloadfee, privatekey)
-    .then(console.log, console.error);
-}
-function fileDownload(isEncrypt) {
+function fileDownload() {
   const fileSaveDir = "./file/down/";
-  const privatekey = isEncrypt ? "123456" : null;
   //mnemonic, fileId, fileSaveDir, privatekey
   let lastMsg = "";
   let timeout = setInterval(() => {
     let msg = global[fileId];
-    if (lastMsg != msg) {
+    if (lastMsg != msg && msg.msg != "downloading.... ") {
       lastMsg = msg;
       console.log(msg);
     }
   }, 100);
-  api.fileDownload(fileId, fileSaveDir, privatekey).then(
+  api.fileDownload(fileId, fileSaveDir).then(
     (t) => {
       console.log(t);
       clearInterval(timeout);
@@ -112,26 +102,14 @@ function fileDecrypt() {
     .then((t) => console.log("decrypt sucess!"), console.error);
 }
 async function getFileUploadTxHash() {
-  const filePath = "./file/a.zip";
-  const privatekey = "123456";
-  const backups = 1;
-  const downloadfee = 0;
-  return api.getFileUploadTxHash(
-    mnemonic,
-    filePath,
-    backups,
-    downloadfee,
-    "",
-    privatekey
-  );
+  const filePath = "./file/a.gz";
+  return api.getFileUploadTxHash(mnemonic, filePath);
 }
-async function fileUploadWithTxHash() {
-  const { txHash, filePath, fileid, privatekey } = await getFileUploadTxHash();
-  // return;
-  api
-    .fileUploadWithTxHash(txHash, filePath, fileid, privatekey)
-    .then(console.log, console.error);
+async function fileUpload() {
+  const { txHash, filePath, fileId } = await getFileUploadTxHash();
+  return api.fileUploadWithTxHash(mnemonic, txHash, filePath, fileId);
 }
+
 async function getFileDeleteTxHash() {
   try {
     return api.getFileDeleteTxHash(mnemonic, fileId);

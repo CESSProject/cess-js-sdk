@@ -6,7 +6,7 @@ const fs = require("fs");
 const ProgressBar = require("color-progress-bar");
 const wsproto = new WsProto();
 const protoFilePath = path.join(__dirname, "ws.proto");
-const hash = require("hash.js");
+const sha256 = require("sha256");
 
 module.exports = { upload, download, getFileInfo };
 
@@ -36,22 +36,71 @@ async function getFileInfo(filePath) {
 function upload(
   sourFilePath,
   fileId,
-  fileHash,
+  publicKey,
+  msg,
+  sign,
   wsUrls,
   showProgressBar,
   log,
   progressLog
 ) {
   return new Promise(async (resolve, reject) => {
+    for (wsUrl of wsUrls) {
+      try {
+        log("try connect to ", wsUrl);
+        progressLog(fileId, "try connect to " + wsUrl);
+        await wsproto.init(wsUrl, protoFilePath, "ReqMsgAuth", "RespMsgAuth");
+        if (wsproto.ws.wsIsOpen) {
+          break;
+        }
+      } catch (e) {
+        log(wsUrl, "close", e);
+      }
+    }
+    const { filename, filesize } = await getFileInfo(sourFilePath);
     progressLog(fileId, "slicing the file ");
-    const totleSize = fs.statSync(sourFilePath).size;
     let blockSize = 102400;
-    if (totleSize > 209715200) {
+    if (filesize > 209715200) {
       blockSize = 2097152;
     }
     const buffInfoArray = fileSlice.getSliceInfoArr(sourFilePath, blockSize); // max length 2MB  = 2097152  kb
     log(buffInfoArray);
+
+    const payloadAuth = {
+      version: 1,
+      id: 2,
+      method: "auth",
+      service: "wservice",
+      body: {
+        fileId: fileId,
+        fileName: filename,
+        fileSize: filesize,
+        blockTotal: buffInfoArray.length,
+        publicKey: publicKey,
+        msg: msg,
+        sign: sign,
+      },
+    };
+    let authRes = await wsproto.request(payloadAuth);
+    log(authRes);
+    if(authRes.body.code!=200){
+      return reject(authRes);
+    }
+    const authToken=authRes.body.data;
+    // return resolve(authRes);
+
     let i = 0;
+
+    let progressBar;
+    if (showProgressBar) {
+      progressBar = new ProgressBar(
+        "uploading [:bar] :rate/bps :percent last: :etas",
+        {
+          width: 50,
+          total: filesize,
+        }
+      );
+    }
     for (wsUrl of wsUrls) {
       try {
         log("try connect to ", wsUrl);
@@ -64,16 +113,6 @@ function upload(
         log(wsUrl, "close", e);
       }
     }
-    let progressBar;
-    if (showProgressBar) {
-      progressBar = new ProgressBar(
-        "uploading [:bar] :rate/bps :percent last: :etas",
-        {
-          width: 50,
-          total: totleSize,
-        }
-      );
-    }
     for (const info of buffInfoArray) {
       try {
         i++;
@@ -85,13 +124,9 @@ function upload(
           method: "writefile",
           service: "wservice",
           body: {
-            fileId: fileId,
-            fileHash: fileHash,
-            backups: "1",
-            blockTotal: buffInfoArray.length,
-            blockSize: buf.length,
             blockIndex: i,
-            data: buf,
+            auth:authToken,            
+            fileData: buf,
           },
         };
         // console.log('***************payload********************');
@@ -122,7 +157,6 @@ function download(
   walletAddress,
   newFilePath,
   fileId,
-  fileHash,
   wsUrls,
   showProgressBar,
   log,
@@ -157,11 +191,9 @@ function download(
           version: 1,
           id: 2,
           method: "readfile",
-          service: "wservice",
+          service: "mservice",
           body: {
-            walletAddress: walletAddress,
             fileId: fileId,
-            fileHash: fileHash,
             blockIndex,
           },
         };
@@ -178,6 +210,7 @@ function download(
           // fs.writeFileSync("b.txt", json.body.data.data);
           // log("index=" + blockTotal, "size=" + json.body.data.data.length);
           bufs.push(json.body.data.data);
+          // fs.writeFileSync('./file/slice/'+i, json.body.data.data);
           blockIndex = json.body.data.blockIndex;
           blockTotal = json.body.data.blockTotal;
           let per = parseInt((blockIndex * 100) / blockTotal);
