@@ -10,7 +10,7 @@ const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
 let fileId =
-  "cess421278c81bea424dffa990706dbb5df67ae2645808ef89c60b10ca416d7771d7"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
+  "cess354eca86b7b74369cc660dde39c05543d1aea918decc0ba15a504743aab1cd98"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
