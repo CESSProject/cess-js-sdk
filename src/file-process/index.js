@@ -185,7 +185,9 @@ function download(
     }
     for (wsUrl of wsUrls) {
       const tmpFileId = fileInfo.sliceInfo[chunkIndex].shardId;
-      
+      if (wsUrls.length > 2 && chunkIndex >= (wsUrls.length * 2) / 3) {
+        break;
+      }
       if (fs.existsSync(tmpDir + tmpFileId)) {
         chunkIndex++;
         continue;
@@ -274,10 +276,7 @@ function download(
         }
       }
       await fileSlice.joinBlcoksToFile(tmpDir + tmpFileId, bufs);
-      log("chunk " + chunkIndex + " download finish");
-      if (wsUrls.length > 2 && chunkIndex >= (wsUrls.length * 2) / 3) {
-        break;
-      }
+      log("chunk " + chunkIndex + " download finish");      
     }
     if (chunkIndex == 0) {
       return reject();
