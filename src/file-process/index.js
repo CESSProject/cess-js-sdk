@@ -45,7 +45,7 @@ function upload(
   progressLog
 ) {
   return new Promise(async (resolve, reject) => {
-    log('wsUrls',wsUrls);
+    log("wsUrls", wsUrls);
     for (wsUrl of wsUrls) {
       try {
         log("try connect to ", wsUrl);
@@ -169,6 +169,7 @@ function download(
 ) {
   return new Promise(async (resolve, reject) => {
     const tmpDir = "./file/chunk/" + fileId + "/";
+    const fileName = fileInfo.fileName[0];
     let chunkIndex = 0;
     if (wsUrls.length == 0) {
       return reject();
@@ -189,7 +190,7 @@ function download(
       let blockTotal = 1;
       let blockIndex = 1;
 
-      const tmpFileId=fileInfo.sliceInfo[chunkIndex].shardId;
+      const tmpFileId = fileInfo.sliceInfo[chunkIndex].shardId;
 
       let i = 0;
       chunkIndex++;
@@ -231,7 +232,9 @@ function download(
               if (i === 1) {
                 log("chunk " + chunkIndex + " total blockTotal:", blockTotal);
                 progressBar = new ProgressBar(
-                  "downloading chunk "+chunkIndex+" [:bar] :percent :current/:total",
+                  "downloading chunk " +
+                    chunkIndex +
+                    " [:bar] :percent :current/:total",
                   {
                     width: 50,
                     total: blockTotal,
@@ -264,7 +267,10 @@ function download(
     } else if (chunkIndex == 1) {
       await fs.renameSync(tmpDir + i, newFilePath);
     } else {
-      await util.reedsolomonDecode(tmpDir, newFilePath);
+      const reedResult=await util.reedsolomonDecode(tmpDir, fileName, chunkIndex);
+      if(reedResult.msg=='ok'&&fs.existsSync(tmpDir+fileName)){
+        fs.readFileSync(tmpDir+fileName,newFilePath);
+      }
     }
     progressLog(fileId, "download finish and joining file with blocks.");
     log("complete");

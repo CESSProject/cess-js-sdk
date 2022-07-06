@@ -3,9 +3,10 @@
  * @Autor: fage
  * @Date: 2022-05-11 09:29:25
  * @LastEditors: fage
- * @LastEditTime: 2022-07-06 11:10:53
+ * @LastEditTime: 2022-07-06 15:34:35
  */
 const bs58 = require("bs58");
+const fs = require("fs");
 const execShell = require("./exec-shell");
 
 module.exports = {
@@ -78,16 +79,20 @@ function byteToString(arr) {
   return str;
 }
 
-function reedsolomonDecode(chunkDir, fileSavePath) {
+function reedsolomonDecode(chunkDir, fileName, fileCount) {
   return new Promise(async (resolve, reject) => {
-    const exePath = {
-      linux: "",
-      win32: "",
-    };
-    const exeFile = exePath[process.platform];
-    const shellCom = exeFile+" -v";
-    const result = await execShell(shellCom);
-    console.log("execShell result", result);
-    resolve({ msg: "ok", data: result });
+    try {
+      console.log("process.platform", process.platform);
+      const exeFile = "./util/" + process.platform + "/";
+      const dataCount = (fileCount * 2) / 3;
+      const reCount = fileCount / 3;
+      const shellCom = `${exeFile}cess-rs ${chunkDir} ${fileName} ${dataCount} ${reCount}`;
+      const result = await execShell(shellCom);
+      console.log("execShell result", result);
+      resolve({ msg: "ok", data: result });
+    } catch (e) {
+      console.error(e);
+      reject(e);
+    }
   });
 }
