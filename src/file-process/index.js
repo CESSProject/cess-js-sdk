@@ -259,7 +259,7 @@ function download(
           console.error(e);
         }
       }
-      await fileSlice.joinBlcoksToFile(tmpDir + chunkIndex, bufs);
+      await fileSlice.joinBlcoksToFile(tmpDir + tmpFileId, bufs);
       log("chunk " + chunkIndex + " download finish");
     }
     if (chunkIndex == 0) {
