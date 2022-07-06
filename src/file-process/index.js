@@ -170,6 +170,12 @@ function download(
 ) {
   return new Promise(async (resolve, reject) => {
     const tmpDir = path.join(__dirname, "../../file/chunk/");
+    if (fs.existsSync(tmpDir + fileId)) {
+      fs.renameSync(tmpDir + fileId, newFilePath);
+      log("complete");
+      progressLog(fileId, "join file complete.");
+      return resolve();
+    }
     mkdirp.sync(tmpDir);
     mkdirp.sync(path.dirname(newFilePath));
     const fileName = fileInfo.fileName[0];
@@ -178,6 +184,10 @@ function download(
       return reject();
     }
     for (wsUrl of wsUrls) {
+      if (fs.existsSync(tmpDir + tmpFileId)) {
+        chunkIndex++;
+        continue;
+      }
       try {
         progressLog(fileId, "try connect to " + wsUrl);
         log("try connect to ", wsUrl);
@@ -264,7 +274,7 @@ function download(
       }
       await fileSlice.joinBlcoksToFile(tmpDir + tmpFileId, bufs);
       log("chunk " + chunkIndex + " download finish");
-      if(wsUrls.length>2&&chunkIndex>=((wsUrls.length*2)/3)){
+      if (wsUrls.length > 2 && chunkIndex >= (wsUrls.length * 2) / 3) {
         break;
       }
     }
