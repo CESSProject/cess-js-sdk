@@ -10,7 +10,7 @@ const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
 let fileId =
-  "cess37edba7b46ea9396072788cbb475a0022d19506da149a4e8ec875c2058b8a057"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
+  "cess421278c81bea424dffa990706dbb5df67ae2645808ef89c60b10ca416d7771d7"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
@@ -24,8 +24,13 @@ const keyring = new Keyring(config);
 // findFile();
 // findFileList();
 
+
+
 // fileUpload().then(console.log,console.log);
 fileDownload();
+
+
+
 // fileDelete();
 // fileEncrypt();
 // fileDecrypt();
@@ -102,7 +107,7 @@ function fileDecrypt() {
     .then((t) => console.log("decrypt sucess!"), console.error);
 }
 async function getFileUploadTxHash() {
-  const filePath = "./file/a.gz";
+  const filePath = "./file/a.zip";
   return api.getFileUploadTxHash(mnemonic, filePath);
 }
 async function fileUpload() {

@@ -180,7 +180,7 @@ module.exports = class FileStorage extends ControlBase {
         // this.log('mnemonic.address',mnemonic.address);
         that.progressLog(fileId, "start download...");
         await download(
-          fileInfo.user[0],
+          fileInfo,
           fileSavePath,
           fileId,
           wsURLs,
@@ -298,19 +298,13 @@ module.exports = class FileStorage extends ControlBase {
         const hash = await this.submitTransaction(txHash);
         this.log("transaction success hash:", hash);
         that.progressLog(fileid, "transaction success hash:" + hash);
-        let u8arr = new Uint8Array([21, 31]);
-        console.log(u8arr);
-        let tmp=util.stringToByte('123');
-        console.log(tmp);
-        u8arr=tmp;
-        u8arr='123';
-        const { publicKey, signStr } = await that.authSign(mnemonic, u8arr);
+        const { publicKey, signStr } = await that.authSign(mnemonic, '123');
         this.log("signStr", signStr);
         upload(
           filePath,
           fileid,
           publicKey,
-          u8arr,
+          '123',
           signStr,
           wsURLs,
           true,

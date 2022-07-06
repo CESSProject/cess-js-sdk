@@ -3,10 +3,10 @@
  * @Autor: fage
  * @Date: 2022-05-11 09:29:25
  * @LastEditors: fage
- * @LastEditTime: 2022-07-05 17:42:20
+ * @LastEditTime: 2022-07-06 11:10:53
  */
 const bs58 = require("bs58");
-var rs = require("reedsolomon");
+const execShell = require("./exec-shell");
 
 module.exports = {
   uint8ArrayToString,
@@ -14,6 +14,7 @@ module.exports = {
   base58ToIP,
   stringToByte,
   byteToString,
+  reedsolomonDecode,
 };
 function uint8ArrayToString(u8arr) {
   var dataString = "";
@@ -77,25 +78,16 @@ function byteToString(arr) {
   return str;
 }
 
-function RS(messageLength, errorCorrectionLength) {
-  var dataLength = messageLength - errorCorrectionLength;
-  var encoder = new rs.ReedSolomonEncoder(rs.GenericGF.AZTEC_DATA_8());
-  var decoder = new rs.ReedSolomonDecoder(rs.GenericGF.AZTEC_DATA_8());
-  return {
-    dataLength: dataLength,
-    messageLength: messageLength,
-    errorCorrectionLength: errorCorrectionLength,
-
-    encode: function (message) {
-      encoder.encode(message, errorCorrectionLength);
-    },
-
-    decode: function (message) {
-      decoder.decode(message, errorCorrectionLength);
-    },
-  };
-}
-function reedsolomonDecode(data) {
-    var ec = RS(32, 8);
-    ec.decode(data);
+function reedsolomonDecode(chunkDir, fileSavePath) {
+  return new Promise(async (resolve, reject) => {
+    const exePath = {
+      linux: "",
+      win32: "",
+    };
+    const exeFile = exePath[process.platform];
+    const shellCom = exeFile+" -v";
+    const result = await execShell(shellCom);
+    console.log("execShell result", result);
+    resolve({ msg: "ok", data: result });
+  });
 }

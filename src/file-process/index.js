@@ -1,6 +1,6 @@
 const WsProto = require("websocket-grpc");
 const fileSlice = require("fs-slicer");
-const md5File = require("md5-file");
+const util = require("../util");
 const path = require("path");
 const fs = require("fs");
 const ProgressBar = require("color-progress-bar");
@@ -45,6 +45,7 @@ function upload(
   progressLog
 ) {
   return new Promise(async (resolve, reject) => {
+    log('wsUrls',wsUrls);
     for (wsUrl of wsUrls) {
       try {
         log("try connect to ", wsUrl);
@@ -83,10 +84,14 @@ function upload(
     };
     let authRes = await wsproto.request(payloadAuth);
     log(authRes);
-    if(authRes.body.code!=200){
+    if (authRes.body.code === 201) {
+      // quick upload
+      return resolve(fileId);
+    }
+    if (authRes.body.code != 200) {
       return reject(authRes);
     }
-    const authToken=authRes.body.data;
+    const authToken = authRes.body.data;
     // return resolve(authRes);
 
     let i = 0;
@@ -125,7 +130,7 @@ function upload(
           service: "wservice",
           body: {
             blockIndex: i,
-            auth:authToken,            
+            auth: authToken,
             fileData: buf,
           },
         };
@@ -154,7 +159,7 @@ function upload(
 }
 
 function download(
-  walletAddress,
+  fileInfo,
   newFilePath,
   fileId,
   wsUrls,
@@ -163,92 +168,105 @@ function download(
   progressLog
 ) {
   return new Promise(async (resolve, reject) => {
-    let isFinish = false;
-    let bufs = [];
-    let blockTotal = 1;
-    let blockIndex = 1;
-
+    const tmpDir = "./file/chunk/" + fileId + "/";
+    let chunkIndex = 0;
+    if (wsUrls.length == 0) {
+      return reject();
+    }
     for (wsUrl of wsUrls) {
       try {
         progressLog(fileId, "try connect to " + wsUrl);
         log("try connect to ", wsUrl);
         await wsproto.init(wsUrl, protoFilePath, "ReqMsgDownload", "RespMsg");
-        if (wsproto.ws.wsIsOpen) {
-          break;
+        if (!wsproto.ws.wsIsOpen) {
+          continue;
         }
       } catch (e) {
         log(e);
       }
-    }
+      let isFinish = false;
+      let bufs = [];
+      let blockTotal = 1;
+      let blockIndex = 1;
 
-    let i = 0;
-    progressLog(fileId, "downloading.... from " + wsUrl);
-    log("downloading....");
-    while (!isFinish) {
-      try {
-        i++;
-        var payload = {
-          version: 1,
-          id: 2,
-          method: "readfile",
-          service: "mservice",
-          body: {
-            fileId: fileId,
-            blockIndex,
-          },
-        };
-        // log('ws req json:');
-        // log(payload);
-        let json = await wsproto.request(payload);
-        // log('ws res json:');
-        // log(json);
-        if (
-          json.body.msg &&
-          json.body.msg == "success" &&
-          json.body.data.data
-        ) {
-          // fs.writeFileSync("b.txt", json.body.data.data);
-          // log("index=" + blockTotal, "size=" + json.body.data.data.length);
-          bufs.push(json.body.data.data);
-          // fs.writeFileSync('./file/slice/'+i, json.body.data.data);
-          blockIndex = json.body.data.blockIndex;
-          blockTotal = json.body.data.blockTotal;
-          let per = parseInt((blockIndex * 100) / blockTotal);
-          progressLog(fileId, "downloading.... ", null, per);
-          // log("blockIndex:", blockIndex, "blockTotal:", blockTotal);
-          if (showProgressBar) {
-            if (i === 1) {
-              log("total blockTotal:", blockTotal);
-              progressBar = new ProgressBar(
-                "downloading [:bar] :percent :current/:total",
-                {
-                  width: 50,
-                  total: blockTotal,
-                }
-              );
-              progressBar.tick();
-            } else {
-              progressBar.tick();
+      const tmpFileId=fileInfo.sliceInfo[chunkIndex].shardId;
+
+      let i = 0;
+      chunkIndex++;
+      progressLog(fileId, "downloading.... from " + wsUrl);
+      log("downloading....");
+      while (!isFinish) {
+        try {
+          i++;
+          var payload = {
+            version: 1,
+            id: 2,
+            method: "readfile",
+            service: "mservice",
+            body: {
+              fileId: tmpFileId,
+              blockIndex,
+            },
+          };
+          // log('ws req json:');
+          // log(payload);
+          let json = await wsproto.request(payload);
+          // log('ws res json:');
+          // log(json);
+          if (
+            json.body.msg &&
+            json.body.msg == "success" &&
+            json.body.data.data
+          ) {
+            // fs.writeFileSync("b.txt", json.body.data.data);
+            // log("index=" + blockTotal, "size=" + json.body.data.data.length);
+            bufs.push(json.body.data.data);
+            // fs.writeFileSync('./file/slice/'+i, json.body.data.data);
+            blockIndex = json.body.data.blockIndex;
+            blockTotal = json.body.data.blockTotal;
+            let per = parseInt((blockIndex * 100) / blockTotal);
+            progressLog(fileId, "downloading.... ", null, per);
+            // log("blockIndex:", blockIndex, "blockTotal:", blockTotal);
+            if (showProgressBar) {
+              if (i === 1) {
+                log("chunk " + chunkIndex + " total blockTotal:", blockTotal);
+                progressBar = new ProgressBar(
+                  "downloading chunk "+chunkIndex+" [:bar] :percent :current/:total",
+                  {
+                    width: 50,
+                    total: blockTotal,
+                  }
+                );
+                progressBar.tick();
+              } else {
+                progressBar.tick();
+              }
             }
-          }
-          if (blockIndex < blockTotal) {
-            blockIndex++;
-            isFinish = false;
+            if (blockIndex < blockTotal) {
+              blockIndex++;
+              isFinish = false;
+            } else {
+              isFinish = true;
+            }
           } else {
+            // log(json);
             isFinish = true;
           }
-        } else {
-          // log(json);
-          isFinish = true;
+        } catch (e) {
+          console.error(e);
         }
-      } catch (e) {
-        console.error(e);
-        return reject(e);
       }
+      await fileSlice.joinBlcoksToFile(tmpDir + chunkIndex, bufs);
+      log("chunk " + chunkIndex + " download finish");
+    }
+    if (chunkIndex == 0) {
+      return reject();
+    } else if (chunkIndex == 1) {
+      await fs.renameSync(tmpDir + i, newFilePath);
+    } else {
+      await util.reedsolomonDecode(tmpDir, newFilePath);
     }
     progressLog(fileId, "download finish and joining file with blocks.");
-    log("download finish");
-    await fileSlice.joinBlcoksToFile(newFilePath, bufs);
     log("complete");
     progressLog(fileId, "join file complete.");
     resolve();
