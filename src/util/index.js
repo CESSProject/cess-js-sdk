@@ -3,10 +3,11 @@
  * @Autor: fage
  * @Date: 2022-05-11 09:29:25
  * @LastEditors: fage
- * @LastEditTime: 2022-07-06 15:52:38
+ * @LastEditTime: 2022-07-06 16:45:56
  */
 const bs58 = require("bs58");
 const fs = require("fs");
+const path = require("path");
 const execShell = require("./exec-shell");
 
 module.exports = {
@@ -79,14 +80,14 @@ function byteToString(arr) {
   return str;
 }
 
-function reedsolomonDecode(chunkDir, fileName, fileCount) {
+function reedsolomonDecode(chunkDir, fileId, fileCount) {
   return new Promise(async (resolve, reject) => {
     try {
       console.log("process.platform", process.platform);
-      const exeFile = "./src/util/" + process.platform + "/";
+      const exeFile = path.join(__dirname, process.platform, "./");
       const dataCount = (fileCount * 2) / 3;
       const reCount = fileCount / 3;
-      const shellCom = `${exeFile}cess-rs ${chunkDir} ${fileName} ${dataCount} ${reCount}`;
+      const shellCom = `${exeFile}cess-rs ${chunkDir} ${fileId} ${dataCount} ${reCount}`;
       const result = await execShell(shellCom);
       console.log("execShell result", result);
       resolve({ msg: "ok", data: result });

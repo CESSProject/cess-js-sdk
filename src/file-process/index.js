@@ -168,7 +168,7 @@ function download(
   progressLog
 ) {
   return new Promise(async (resolve, reject) => {
-    const tmpDir = "./file/chunk/" + fileId + "/";
+    const tmpDir =path.join(__dirname,"../../file/chunk/");
     const fileName = fileInfo.fileName[0];
     let chunkIndex = 0;
     if (wsUrls.length == 0) {
@@ -267,9 +267,9 @@ function download(
     } else if (chunkIndex == 1) {
       await fs.renameSync(tmpDir + i, newFilePath);
     } else {
-      const reedResult=await util.reedsolomonDecode(tmpDir, fileName, chunkIndex);
-      if(reedResult.msg=='ok'&&fs.existsSync(tmpDir+fileName)){
-        fs.readFileSync(tmpDir+fileName,newFilePath);
+      const reedResult=await util.reedsolomonDecode(tmpDir, fileId, chunkIndex);
+      if(reedResult.msg=='ok'&&fs.existsSync(tmpDir+fileId)){
+        fs.readFileSync(tmpDir+fileId,newFilePath);
       }
     }
     progressLog(fileId, "download finish and joining file with blocks.");
