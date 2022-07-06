@@ -184,6 +184,8 @@ function download(
       return reject();
     }
     for (wsUrl of wsUrls) {
+      const tmpFileId = fileInfo.sliceInfo[chunkIndex].shardId;
+      
       if (fs.existsSync(tmpDir + tmpFileId)) {
         chunkIndex++;
         continue;
@@ -202,8 +204,7 @@ function download(
       let bufs = [];
       let blockTotal = 1;
       let blockIndex = 1;
-
-      const tmpFileId = fileInfo.sliceInfo[chunkIndex].shardId;
+      
 
       let i = 0;
       chunkIndex++;
