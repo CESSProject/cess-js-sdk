@@ -279,7 +279,7 @@ function download(
         wsUrls.length
       );
       if (reedResult.msg == "ok" && fs.existsSync(tmpDir + fileId)) {
-        fs.readFileSync(tmpDir + fileId, newFilePath);
+        fs.renameSync(tmpDir + fileId, newFilePath);
       }
     }
     progressLog(fileId, "download finish and joining file with blocks.");
