@@ -3,6 +3,7 @@ const fileSlice = require("fs-slicer");
 const util = require("../util");
 const path = require("path");
 const fs = require("fs");
+const mkdirp = require("mkdirp");
 const ProgressBar = require("color-progress-bar");
 const wsproto = new WsProto();
 const protoFilePath = path.join(__dirname, "ws.proto");
@@ -168,7 +169,9 @@ function download(
   progressLog
 ) {
   return new Promise(async (resolve, reject) => {
-    const tmpDir =path.join(__dirname,"../../file/chunk/");
+    const tmpDir = path.join(__dirname, "../../file/chunk/");
+    mkdirp.sync(tmpDir);
+    mkdirp.sync(path.dirname(newFilePath));
     const fileName = fileInfo.fileName[0];
     let chunkIndex = 0;
     if (wsUrls.length == 0) {
@@ -261,15 +264,22 @@ function download(
       }
       await fileSlice.joinBlcoksToFile(tmpDir + tmpFileId, bufs);
       log("chunk " + chunkIndex + " download finish");
+      if(wsUrls.length>2&&chunkIndex>=((wsUrls.length*2)/3)){
+        break;
+      }
     }
     if (chunkIndex == 0) {
       return reject();
     } else if (chunkIndex == 1) {
-      await fs.renameSync(tmpDir + i, newFilePath);
+      await fs.renameSync(tmpDir + tmpFileId, newFilePath);
     } else {
-      const reedResult=await util.reedsolomonDecode(tmpDir, fileId, chunkIndex);
-      if(reedResult.msg=='ok'&&fs.existsSync(tmpDir+fileId)){
-        fs.readFileSync(tmpDir+fileId,newFilePath);
+      const reedResult = await util.reedsolomonDecode(
+        tmpDir,
+        fileId,
+        chunkIndex
+      );
+      if (reedResult.msg == "ok" && fs.existsSync(tmpDir + fileId)) {
+        fs.readFileSync(tmpDir + fileId, newFilePath);
       }
     }
     progressLog(fileId, "download finish and joining file with blocks.");

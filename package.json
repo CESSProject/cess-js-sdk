@@ -34,6 +34,7 @@
     "file-aes-crypt": "^1.0.3",
     "fs-slicer": "^1.0.7",
     "md5-file": "^5.0.0",
+    "mkdirp": "^1.0.4",
     "protobufjs": "^6.11.2",
     "sha256": "^0.2.0",
     "short-uuid": "^4.2.0",
