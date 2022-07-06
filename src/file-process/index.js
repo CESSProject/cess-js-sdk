@@ -276,7 +276,7 @@ function download(
       const reedResult = await util.reedsolomonDecode(
         tmpDir,
         fileId,
-        chunkIndex
+        wsUrls.length
       );
       if (reedResult.msg == "ok" && fs.existsSync(tmpDir + fileId)) {
         fs.readFileSync(tmpDir + fileId, newFilePath);
