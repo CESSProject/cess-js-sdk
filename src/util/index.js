@@ -3,7 +3,7 @@
  * @Autor: fage
  * @Date: 2022-05-11 09:29:25
  * @LastEditors: fage
- * @LastEditTime: 2022-07-06 16:45:56
+ * @LastEditTime: 2022-07-08 17:49:30
  */
 const bs58 = require("bs58");
 const fs = require("fs");
@@ -85,8 +85,12 @@ function reedsolomonDecode(chunkDir, fileId, fileCount) {
     try {
       console.log("process.platform", process.platform);
       const exeFile = path.join(__dirname, process.platform, "./");
-      const dataCount = (fileCount * 2) / 3;
-      const reCount = fileCount / 3;
+      let dataCount = (fileCount * 2) / 3;
+      let reCount = fileCount / 3;
+      if (fileCount == 2) {
+        dataCount = 2;
+        reCount = 2;
+      }
       const shellCom = `${exeFile}cess-rs ${chunkDir} ${fileId} ${dataCount} ${reCount}`;
       const result = await execShell(shellCom);
       console.log("execShell result", result);

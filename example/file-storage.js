@@ -10,7 +10,7 @@ const mnemonic =
   "denial empower wear venue distance leopard lamp source off other twelve permit";
 const walletAddress = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
 let fileId =
-  "cessae3621ecaeb37be24fabbb65d00336709e268b97f0ffaf438667f970f8eb798c"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
+  "cess4dd2bb46d61790b4947914ce9c809cd16a4fadca03c72b12a5efa018fff4281c"; //"o1yBUPi7MzTX9VCa6xUfTY"; // a.zip=7tG48E9Mx58R911GCjir9v  a.exe=hmPZnyLA4D9UNc4Yz1rTWD  ghvsqdCiCpWAtwGe5zC8Rm a.txt=9LiiknJ5qXHpCXa4QkV6UU
 
 const api = new FileStorage(config);
 const keyring = new Keyring(config);
@@ -107,12 +107,12 @@ function fileDecrypt() {
     .then((t) => console.log("decrypt sucess!"), console.error);
 }
 async function getFileUploadTxHash() {
-  const filePath = "./file/a.zip";
+  const filePath = "./file/a.txt";
   return api.getFileUploadTxHash(mnemonic, filePath);
 }
 async function fileUpload() {
-  const { txHash, filePath, fileId } = await getFileUploadTxHash();
-  return api.fileUploadWithTxHash(mnemonic, txHash, filePath, fileId);
+  const { txHash, filePath, fileId, publicKeyStr, signStr } = await getFileUploadTxHash();
+  return api.fileUploadWithTxHash(txHash, filePath, fileId, publicKeyStr, signStr);
 }
 
 async function getFileDeleteTxHash() {

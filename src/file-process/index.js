@@ -183,8 +183,10 @@ function download(
     if (wsUrls.length == 0) {
       return reject();
     }
+    let lastWS = "";
+    let tmpFileId ='';
     for (wsUrl of wsUrls) {
-      const tmpFileId = fileInfo.sliceInfo[chunkIndex].shardId;
+      tmpFileId = fileInfo.sliceInfo[chunkIndex].shardId;
       if (wsUrls.length > 2 && chunkIndex >= (wsUrls.length * 2) / 3) {
         break;
       }
@@ -192,26 +194,29 @@ function download(
         chunkIndex++;
         continue;
       }
-      try {
-        progressLog(fileId, "try connect to " + wsUrl);
-        log("try connect to ", wsUrl);
-        await wsproto.init(wsUrl, protoFilePath, "ReqMsgDownload", "RespMsg");
-        if (!wsproto.ws.wsIsOpen) {
-          continue;
+      if (lastWS != wsUrl || !wsproto.ws.wsIsOpen) {
+        try {
+          progressLog(fileId, "try connect to " + wsUrl);
+          log("try connect to ", wsUrl);
+          await wsproto.init(wsUrl, protoFilePath, "ReqMsgDownload", "RespMsg");
+          if (!wsproto.ws.wsIsOpen) {
+            continue;
+          }
+          lastWS = wsUrl;
+        } catch (e) {
+          log(e);
         }
-      } catch (e) {
-        log(e);
+        progressLog(fileId, "downloading.... from " + wsUrl);
+        log("downloading....");
       }
       let isFinish = false;
       let bufs = [];
       let blockTotal = 1;
       let blockIndex = 1;
-      
 
       let i = 0;
       chunkIndex++;
-      progressLog(fileId, "downloading.... from " + wsUrl);
-      log("downloading....");
+
       while (!isFinish) {
         try {
           i++;
@@ -276,7 +281,7 @@ function download(
         }
       }
       await fileSlice.joinBlcoksToFile(tmpDir + tmpFileId, bufs);
-      log("chunk " + chunkIndex + " download finish");      
+      log("chunk " + chunkIndex + " download finish");
     }
     if (chunkIndex == 0) {
       return reject();

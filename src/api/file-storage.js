@@ -6,7 +6,7 @@ const md5File = require("md5-file");
 const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
 const { getFileInfo, upload, download } = require("../file-process");
-const { u8aToHex } = require("@polkadot/util");
+const { u8aToHex,hexToU8a } = require("@polkadot/util");
 
 module.exports = class FileStorage extends ControlBase {
   constructor(config) {
@@ -174,7 +174,7 @@ module.exports = class FileStorage extends ControlBase {
         let fileSavePath = path.join(fileSaveDir, "./") + fileInfo.fileName[0];
         that.progressLog(fileId, "waiting findSchedulerIPs.");
 
-        console.log('fileInfo.sliceInfo',fileInfo.sliceInfo);
+        console.log("fileInfo.sliceInfo", fileInfo.sliceInfo);
         const wsURLs = that.getIP(fileInfo.sliceInfo, "minerIp");
         that.log(wsURLs);
         // this.log('mnemonic.address',mnemonic.address);
@@ -245,7 +245,14 @@ module.exports = class FileStorage extends ControlBase {
       await txAPI.isReady;
       const tx = txAPI.tx.fileBank.uploadDeclaration(fileId, filename);
       const txHash = await this.sign(mnemonic, tx);
-      return { txHash, fileId, filePath };
+      const { publicKeyStr, signStr } = await this.authSign(mnemonic, "cess");
+      return {
+        txHash,
+        fileId,
+        filePath,
+        publicKeyStr,
+        signStr,
+      };
     } catch (error) {
       console.error(error);
       return null;
@@ -274,7 +281,7 @@ module.exports = class FileStorage extends ControlBase {
       console.error(error);
     }
   }
-  async fileUploadWithTxHash(mnemonic, txHash, filePath, fileid) {
+  async fileUploadWithTxHash(txHash, filePath, fileid, publicKeyStr, signStr) {
     return new Promise(async (resolve, reject) => {
       const that = this;
       try {
@@ -286,6 +293,8 @@ module.exports = class FileStorage extends ControlBase {
           that.progressLog(fileid, "filePath is null", null, 0, true);
           throw "filePath is null";
         }
+        const publicKey=hexToU8a(publicKeyStr);
+        const signU8A=hexToU8a(signStr);
         that.progressLog(fileid, "get file info...");
         that.progressLog(fileid, "waiting socket ready...");
         await this.api.isReady;
@@ -298,14 +307,13 @@ module.exports = class FileStorage extends ControlBase {
         const hash = await this.submitTransaction(txHash);
         this.log("transaction success hash:", hash);
         that.progressLog(fileid, "transaction success hash:" + hash);
-        const { publicKey, signStr } = await that.authSign(mnemonic, '123');
         this.log("signStr", signStr);
         upload(
           filePath,
           fileid,
           publicKey,
-          '123',
-          signStr,
+          "cess",
+          signU8A,
           wsURLs,
           true,
           that.log,
@@ -329,13 +337,19 @@ module.exports = class FileStorage extends ControlBase {
     let kr = this.keyring;
     const pair = kr.createFromUri(mnemonic);
     kr.setSS58Format(11330);
-    const publicKey = pair.publicKey;
+    const publicKeyU8A = pair.publicKey;
+    console.log("publicKeyU8A", publicKeyU8A);
     const ss58 = pair.address;
-    const signStr = pair.sign(msg);
+    const signU8A = pair.sign(msg);
+    console.log("signU8A", signU8A);
+    const publicKeyStr = u8aToHex(publicKeyU8A);
+    const signStr = u8aToHex(signU8A);
     return {
       mnemonic,
       msg,
-      publicKey,
+      publicKeyU8A,
+      publicKeyStr,
+      signU8A,
       signStr,
       ss58,
     };
