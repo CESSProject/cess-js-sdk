@@ -6,7 +6,7 @@ const md5File = require("md5-file");
 const short = require("short-uuid");
 const FileCrypt = require("file-aes-crypt");
 const { getFileInfo, upload, download } = require("../file-process");
-const { u8aToHex,hexToU8a } = require("@polkadot/util");
+const { u8aToHex, hexToU8a } = require("@polkadot/util");
 
 module.exports = class FileStorage extends ControlBase {
   constructor(config) {
@@ -103,30 +103,25 @@ module.exports = class FileStorage extends ControlBase {
       // resolve(ips);
     });
   }
-  async fileUpload(mnemonic, filePath, backups, downloadfee, privatekey) {
+  async fileUpload(mnemonic, filePath) {
     return new Promise(async (resolve, reject) => {
       try {
         process.on("uncaughtException", function (e) {
           reject(e);
         });
-        const { txHash, fileid } = await this.getFileUploadTxHash(
-          mnemonic,
-          filePath,
-          backups,
-          downloadfee,
-          null,
-          privatekey
-        );
+        const { txHash, fileId, publicKeyStr, signStr } =
+          await this.getFileUploadTxHash(mnemonic, filePath);
         if (!txHash) {
           return reject();
         }
-        let transfterHash = await this.fileUploadWithTxHash(
+        await this.fileUploadWithTxHash(
           txHash,
           filePath,
-          fileid,
-          privatekey
+          fileId,
+          publicKeyStr,
+          signStr
         );
-        resolve(fileid);
+        resolve(fileId);
       } catch (e) {
         this.error(e);
         return reject(e);
@@ -258,29 +253,6 @@ module.exports = class FileStorage extends ControlBase {
       return null;
     }
   }
-  async getFileDeleteTxHash(mnemonic, fileid) {
-    try {
-      const txAPI = this.api;
-      await txAPI.isReady;
-      const tx = txAPI.tx.fileBank.deleteFile(fileid);
-      const txHash = await this.sign(mnemonic, tx);
-      return txHash;
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
-  }
-  async getExpansionTxHash(mnemonic, spaceCount, leaseCount, maxPrice) {
-    try {
-      const txAPI = this.api;
-      await txAPI.isReady;
-      const tx = txAPI.tx.fileBank.buySpace(spaceCount, leaseCount, maxPrice);
-      const txHash = await this.sign(mnemonic, tx);
-      return txHash;
-    } catch (error) {
-      console.error(error);
-    }
-  }
   async fileUploadWithTxHash(txHash, filePath, fileid, publicKeyStr, signStr) {
     return new Promise(async (resolve, reject) => {
       const that = this;
@@ -293,8 +265,8 @@ module.exports = class FileStorage extends ControlBase {
           that.progressLog(fileid, "filePath is null", null, 0, true);
           throw "filePath is null";
         }
-        const publicKey=hexToU8a(publicKeyStr);
-        const signU8A=hexToU8a(signStr);
+        const publicKey = hexToU8a(publicKeyStr);
+        const signU8A = hexToU8a(signStr);
         that.progressLog(fileid, "get file info...");
         that.progressLog(fileid, "waiting socket ready...");
         await this.api.isReady;
@@ -325,6 +297,29 @@ module.exports = class FileStorage extends ControlBase {
         reject(e);
       }
     });
+  }
+  async getFileDeleteTxHash(mnemonic, fileid) {
+    try {
+      const txAPI = this.api;
+      await txAPI.isReady;
+      const tx = txAPI.tx.fileBank.deleteFile(fileid);
+      const txHash = await this.sign(mnemonic, tx);
+      return txHash;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+  async getExpansionTxHash(mnemonic, spaceCount, leaseCount, maxPrice) {
+    try {
+      const txAPI = this.api;
+      await txAPI.isReady;
+      const tx = txAPI.tx.fileBank.buySpace(spaceCount, leaseCount, maxPrice);
+      const txHash = await this.sign(mnemonic, tx);
+      return txHash;
+    } catch (error) {
+      console.error(error);
+    }
   }
   async fileDeleteWithTxHash(txHash) {
     return this.submitTransaction(txHash);
