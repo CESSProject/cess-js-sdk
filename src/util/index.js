@@ -1,7 +1,36 @@
+/*
+ * @Description:
+ * @Autor: fage
+ * @Date: 2022-05-11 09:29:25
+ * @LastEditors: fage
+ * @LastEditTime: 2022-07-08 17:49:30
+ */
+const bs58 = require("bs58");
+const fs = require("fs");
+const path = require("path");
+const execShell = require("./exec-shell");
+
 module.exports = {
+  uint8ArrayToString,
+  uint8ArrayToIP,
+  base58ToIP,
   stringToByte,
-  byteToString
+  byteToString,
+  reedsolomonDecode,
 };
+function uint8ArrayToString(u8arr) {
+  var dataString = "";
+  for (var i = 0; i < u8arr.length; i++) {
+    dataString += String.fromCharCode(u8arr[i]);
+  }
+  return dataString;
+}
+function uint8ArrayToIP(u8arr) {
+  return uint8ArrayToString(bs58.decode(uint8ArrayToString(u8arr)));
+}
+function base58ToIP(u8arr) {
+  return uint8ArrayToString(bs58.decode(u8arr));
+}
 
 function stringToByte(str) {
   var bytes = new Array();
@@ -49,4 +78,26 @@ function byteToString(arr) {
     }
   }
   return str;
+}
+
+function reedsolomonDecode(chunkDir, fileId, fileCount) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log("process.platform", process.platform);
+      const exeFile = path.join(__dirname, process.platform, "./");
+      let dataCount = (fileCount * 2) / 3;
+      let reCount = fileCount / 3;
+      if (fileCount == 2) {
+        dataCount = 2;
+        reCount = 2;
+      }
+      const shellCom = `${exeFile}cess-rs ${chunkDir} ${fileId} ${dataCount} ${reCount}`;
+      const result = await execShell(shellCom);
+      console.log("execShell result", result);
+      resolve({ msg: "ok", data: result });
+    } catch (e) {
+      console.error(e);
+      reject(e);
+    }
+  });
 }
