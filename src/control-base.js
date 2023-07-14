@@ -1,23 +1,6 @@
-/*
- * @Description: 
- * @Autor: fage
- * @Date: 2022-04-29 17:24:00
- * @LastEditors: fage
- * @LastEditTime: 2022-07-06 10:50:19
- */
-const initApi = require("./init-api");
-
 module.exports = class ControlBase {
-  constructor(config) {
-    if (config && !config.nodeURL && config.api && config.keyring) {
-      this.api = config.api;
-      this.keyring = config.keyring;
-      return;
-    }
-    const apiObj = initApi(config);
-    this.api = apiObj.api;
-    this.keyring = apiObj.keyring;
-    this.debug = config.debug;
+  constructor(api) {
+    this.api = api;
   }
   progressLog = (key, msg, data, per = 0, isComplete = false) => {
     global[key] = {
