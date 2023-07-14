@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+message uploadBody {
+  int32   blockIndex=1;
+  bytes   auth=2;
+  bytes   fileData=3;
+}
+
+message ReqMsgUpload {
+    int32   version = 1;
+    uint64  id = 2;
+    string  method = 3;
+    string  service = 4;
+    uploadBody   body = 5;
+}
+message authBody {
+  string  fileId = 1;
+  string  fileName = 2;
+  int64   fileSize = 3;
+  int32   blockTotal = 4;
+  bytes   publicKey=5;
+  string   msg=6;
+  bytes   sign=7;
+}
+message ReqMsgAuth{
+    int32   version = 1;
+    uint64  id = 2;
+    string  method = 3;
+    string  service = 4;
+    authBody   body = 5;
+}
+
+
+message ReqMsgDownload {
+    int32   version = 1;
+    uint64  id = 2;
+    string  method = 3;
+    string  service = 4;
+    ReqdownloadBody   body = 5;
+}
+message ReqdownloadBody{
+  string  file_id=1;
+  int32   blockIndex=2;
+}
+
+message ResDownloadBody {
+  int32   blockTotal=1;
+  int32   blockIndex=2;
+  bytes   data=3;
+}
+
+message RespMsg {
+    uint64  id = 1;
+    RespBody   body = 2;
+}
+
+message RespBody {
+    int32   code = 1;
+    string  msg = 2;
+    ResDownloadBody   data = 3;
+}
+message RespMsgAuth {
+    uint64  id = 1;
+    RespBodyAuth   body = 2;
+}
+message RespBodyAuth {
+    int32   code = 1;
+    string  msg = 2;
+    bytes   data = 3;
+}
