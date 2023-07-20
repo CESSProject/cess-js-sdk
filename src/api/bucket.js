@@ -1,79 +1,53 @@
 const ControlBase = require("../control-base");
-const short = require("short-uuid");
-const { getFileInfo } = require("../file-process");
 
-module.exports = class DataStorage extends ControlBase {
-  constructor(api) {
-    super(api);
+module.exports = class Bucket extends ControlBase {
+  constructor(api, keyring, isDebug) {
+    super(api, keyring, isDebug);
   }
-
-  async getStoreTxHash(mnemonic, filePath, fileid, keyword) {
+  async queryBucketList(accountId32) {
     try {
-      const { filehash, filename, filesize } =await getFileInfo(filePath);
-      console.log("source file hash:", filehash);
-      const txAPI = this.api;
-
-      await txAPI.isReady;
-      if (!fileid) {
-        fileid = short.generate();
-      }
-      //store(pfileid, pfilename, filesize, pkeywords)
-      const tx = txAPI.tx.dataStore.store(fileid, filename, filesize, keyword);
-      const txHash = await this.sign(mnemonic, tx);
-      return { txHash, fileid, filePath };
+      await this.api.isReady;
+      let ret = await this.api.query.fileBank.userBucketList(accountId32);
+      let data = ret.toHuman();
+      return {
+        msg: "ok",
+        data,
+      };
     } catch (error) {
       console.error(error);
-      return null;
+      return {
+        msg: "ok",
+        errMsg: error.message,
+        error: JSON.stringify(error),
+      };
     }
   }
-  async getRetrieveTxHash(mnemonic, fileid) {
+  async queryBucketInfo(accountId32, name) {
     try {
-      const txAPI = this.api;
-      await txAPI.isReady;
-      const tx = txAPI.tx.dataStore.retrieve(fileid);
-      const txHash = await this.sign(mnemonic, tx);
-      return { txHash, fileid };
+      await this.api.isReady;
+      let ret = await this.api.query.fileBank.bucket(accountId32, name);
+      let data = ret.toJSON();
+      return {
+        msg: "ok",
+        data,
+      };
     } catch (error) {
       console.error(error);
-      return null;
+      return {
+        msg: "ok",
+        errMsg: error.message,
+        error: JSON.stringify(error),
+      };
     }
   }
-  async getReplaceTxHash(mnemonic, filePath, oldFileid, newFileid, keyword) {
-    try {
-      const { filehash, filename, filesize } = getFileInfo(filePath);
-      console.log("source file hash:", filehash);
-      const txAPI = this.api;
-
-      await txAPI.isReady;
-      if (!newFileid) {
-        newFileid = short.generate();
-      }
-      //replace(oldFileid, newFileid, pfilename, filesize, pkeywords)
-      const tx = txAPI.tx.dataStore.replace(
-        oldFileid,
-        newFileid,
-        filename,
-        filesize,
-        keyword
-      );
-      const txHash = await this.sign(mnemonic, tx);
-      return { txHash, oldFileid, newFileid, filePath };
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
+  async createBucket(mnemonic, accountId32, name) {
+    await this.api.isReady;
+    const extrinsic = this.api.tx.fileBank.createBucket(accountId32, name);
+    return await this.signAndSend(mnemonic, extrinsic);
   }
-  async getDeleteTxHash(mnemonic, fileid) {
-    try {
-      const txAPI = this.api;
-      await txAPI.isReady;
-      //delete(pfileid)
-      const tx = txAPI.tx.dataStore.delete(fileid);
-      const txHash = await this.sign(mnemonic, tx);
-      return { txHash, fileid };
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
+  async deleteBucket(mnemonic, accountId32, name) {
+    await this.api.isReady;
+    const extrinsic = this.api.tx.fileBank.deleteBucket(accountId32, name);
+    return await this.signAndSend(mnemonic, extrinsic);
   }
 };

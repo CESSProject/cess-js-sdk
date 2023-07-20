@@ -3,6 +3,7 @@ const {
   web3Enable,
   web3FromAddress,
 } = require("@polkadot/extension-dapp");
+const { u8aToHex, hexToU8a } = require("@polkadot/util");
 
 module.exports = class ControlBase {
   constructor(api, keyring, isDebug) {
@@ -10,14 +11,6 @@ module.exports = class ControlBase {
     this.keyring = keyring;
     this.debug = isDebug;
   }
-  progressLog = (key, msg, data, per = 0, isComplete = false) => {
-    global[key] = {
-      msg,
-      per,
-      data,
-      isComplete,
-    };
-  };
   log = (...msg) => {
     if (this.debug) {
       console.log(...msg);
@@ -146,5 +139,27 @@ module.exports = class ControlBase {
         reject(e.message);
       }
     });
+  }
+  async authSign(mnemonic, msg) {
+    await this.api.isReady;
+    let kr = this.keyring;
+    const pair = kr.createFromUri(mnemonic);
+    kr.setSS58Format(11330);
+    const publicKeyU8A = pair.publicKey;
+    // console.log("publicKeyU8A", publicKeyU8A);
+    const ss58 = pair.address;
+    const signU8A = pair.sign(msg);
+    // console.log("signU8A", signU8A);
+    const publicKeyStr = u8aToHex(publicKeyU8A);
+    const signStr = u8aToHex(signU8A);
+    return {
+      mnemonic,
+      msg,
+      publicKeyU8A,
+      publicKeyStr,
+      signU8A,
+      signStr,
+      ss58,
+    };
   }
 };

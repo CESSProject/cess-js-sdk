@@ -22,9 +22,9 @@ module.exports = class Authorize extends ControlBase {
       };
     }
   }
-  async authorize(mnemonic) {
+  async authorize(mnemonic,operator) {
     await this.api.isReady;
-    const extrinsic = this.api.tx.oss.authorize();
+    const extrinsic = this.api.tx.oss.authorize(operator);
     return await this.signAndSend(mnemonic, extrinsic);
   }
   async cancelAuthorize(mnemonic) {
