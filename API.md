@@ -10,11 +10,10 @@
 
 ### 1. 存储空间
 
+userOwnedSpace storageHandler.userOwnedSpace(AccountId32)查询我的空间
 BuySpace   storageHandler.buySpace(gibCount)
 ExpansionSpace  扩展空间大小  storageHandler.expansionSpace(gibCount)
 RenewalSpace 续期  storageHandler.renewalSpace(days)
-userOwnedSpace storageHandler.userOwnedSpace(AccountId32)查询我的空间
-
 
 
 ### 2. 账号授权

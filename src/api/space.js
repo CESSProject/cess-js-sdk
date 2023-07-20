@@ -1,19 +1,21 @@
 const ControlBase = require("../control-base");
-const short = require("short-uuid");
-const { getFileInfo } = require("../file-process");
 
-module.exports = class DataStorage extends ControlBase {
-  constructor(api) {
-    super(api);
-  }
-
+module.exports = class Space extends ControlBase {
+  constructor(api, keyring, isDebug) {
+    super(api, keyring, isDebug);
+  }  
   async userOwnedSpace(accountId32) {
     try {
       await this.api.isReady;
-      let ret = await this.api.storageHandler.userOwnedSpace(accountId32);
+      let ret = await this.api.query.storageHandler.userOwnedSpace(accountId32);
+      let data = ret.toJSON();
+      if (data) {
+        let human = ret.toHuman();
+        data.state = human.state;
+      }
       return {
         msg: "ok",
-        data: ret,
+        data,
       };
     } catch (error) {
       console.error(error);
@@ -24,54 +26,19 @@ module.exports = class DataStorage extends ControlBase {
       };
     }
   }
-  async getRetrieveTxHash(mnemonic, fileid) {
-    try {
-      const txAPI = this.api;
-      await txAPI.isReady;
-      const tx = txAPI.tx.dataStore.retrieve(fileid);
-      const txHash = await this.sign(mnemonic, tx);
-      return { txHash, fileid };
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
+  async buySpace(mnemonic, gibCount) {
+    await this.api.isReady;
+    const extrinsic = this.api.tx.storageHandler.buySpace(gibCount);
+    return await this.signAndSend(mnemonic, extrinsic);
   }
-  async getReplaceTxHash(mnemonic, filePath, oldFileid, newFileid, keyword) {
-    try {
-      const { filehash, filename, filesize } = getFileInfo(filePath);
-      console.log("source file hash:", filehash);
-      const txAPI = this.api;
-
-      await txAPI.isReady;
-      if (!newFileid) {
-        newFileid = short.generate();
-      }
-      //replace(oldFileid, newFileid, pfilename, filesize, pkeywords)
-      const tx = txAPI.tx.dataStore.replace(
-        oldFileid,
-        newFileid,
-        filename,
-        filesize,
-        keyword
-      );
-      const txHash = await this.sign(mnemonic, tx);
-      return { txHash, oldFileid, newFileid, filePath };
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
+  async expansionSpace(mnemonic, gibCount) {
+    await this.api.isReady;
+    const extrinsic = this.api.tx.storageHandler.expansionSpace(gibCount);
+    return await this.signAndSend(mnemonic, extrinsic);
   }
-  async getDeleteTxHash(mnemonic, fileid) {
-    try {
-      const txAPI = this.api;
-      await txAPI.isReady;
-      //delete(pfileid)
-      const tx = txAPI.tx.dataStore.delete(fileid);
-      const txHash = await this.sign(mnemonic, tx);
-      return { txHash, fileid };
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
+  async renewalSpace(mnemonic, days) {
+    await this.api.isReady;
+    const extrinsic = this.api.tx.storageHandler.renewalSpace(days);
+    return await this.signAndSend(mnemonic, extrinsic);
   }
 };

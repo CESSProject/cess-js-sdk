@@ -1,12 +1,22 @@
-const FileStorage = require("./src/api/file-storage");
-const DataStorage = require("./src/api/data-storage");
-const Keyring = require("./src/keyring");
-const Converter = require("./src/walletAddressConverter");
+if (global) {
+  global.window = {};
+}else{
+  window.global={};
+}
+
+const Authorize = require("./src/api/authorize");
+const Space = require("./src/api/space");
+const InitAPI = require("./src/init-api");
+const Common = require("./src/api/common");
+// const Keyring = require("./src/keyring");
+// const Converter = require("./src/walletAddressConverter");
 
 module.exports = {
-  FileStorage,
-  DataStorage,
-  Keyring,
-  Converter
+  InitAPI,
+  Common,
+  Space, 
+  Authorize
+  // File,
+  // Keyring,
+  // Converter
 };
-
