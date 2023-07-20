@@ -26,19 +26,21 @@ QuaryAuthorizedAccount  oss.authorityList
 
 ### 3. Bucket管理
 
-QueryBucketInfo   fileBank.bucket
 QueryBucketList   fileBank.userBucketList
+QueryBucketInfo   fileBank.bucket
 CreateBucket  fileBank.createBucket
 DeleteBucket  fileBank.deleteBucket
 
 
 ### 4. 文件管理
 
+FileList   userHoldFileList(AccountId32)
+QueryFileMetadata  fileBank.file
 StoreFile
 DeleteFile  fileBank.deleteFile
 RetrieveFile  下载
-QueryFileMetadata  fileBank.file
-FileList   userHoldFileList(AccountId32)
+
+
 
 
 https://github.com/CESSProject/cess-go-sdk/blob/main/core/sdk/sdk.go
