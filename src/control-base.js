@@ -1,9 +1,16 @@
-const {
-  web3Accounts,
-  web3Enable,
-  web3FromAddress,
-} = require("@polkadot/extension-dapp");
-const { u8aToHex, hexToU8a } = require("@polkadot/util");
+let web3Enable = () => [];
+let web3FromAddress = () => {
+  return {};
+};
+const isBrower =
+  typeof window != "undefined" && typeof window.document != "undefined";
+
+if (isBrower) {
+  const extension = require("@polkadot/extension-dapp");
+  web3Enable = extension.web3Enable;
+  web3FromAddress = extension.web3FromAddress;
+}
+const util = require("../src/util/index");
 
 module.exports = class ControlBase {
   constructor(api, keyring, isDebug) {
@@ -61,9 +68,13 @@ module.exports = class ControlBase {
       }
     });
   }
-  async signAndSend(mnemonic, extrinsic) {
+  signAndSend(mnemonic, extrinsic) {
     return new Promise(async (resolve, reject) => {
       try {
+        if (mnemonic.length < 55) {
+          let result = await this.signAndSendWeb3(mnemonic, extrinsic);
+          return resolve(result);
+        }
         await this.api.isReady;
         const pair = this.keyring.createFromUri(mnemonic);
         const extrinsicHash = extrinsic.hash.toHex();
@@ -150,8 +161,8 @@ module.exports = class ControlBase {
     const ss58 = pair.address;
     const signU8A = pair.sign(msg);
     // console.log("signU8A", signU8A);
-    const publicKeyStr = u8aToHex(publicKeyU8A);
-    const signStr = u8aToHex(signU8A);
+    const publicKeyStr = util.uint8ArrayToHex(publicKeyU8A);
+    const signStr = util.uint8ArrayToHex(signU8A);
     return {
       mnemonic,
       msg,

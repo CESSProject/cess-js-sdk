@@ -1,22 +1,22 @@
 # API Docs
 
-## 目录
-1. 存储空间
-2. 账号授权
-3. Bucket管理
-4. 文件管理
+## List
+1. Space
+2. Authorize
+3. Bucke
+4. File
 
 
 
-### 1. 存储空间
+### 1. Space
 
-userOwnedSpace storageHandler.userOwnedSpace(AccountId32)查询我的空间
+userOwnedSpace storageHandler.userOwnedSpace(AccountId32)
 BuySpace   storageHandler.buySpace(gibCount)
-ExpansionSpace  扩展空间大小  storageHandler.expansionSpace(gibCount)
-RenewalSpace 续期  storageHandler.renewalSpace(days)
+ExpansionSpace   storageHandler.expansionSpace(gibCount)
+RenewalSpace  storageHandler.renewalSpace(days)
 
 
-### 2. 账号授权
+### 2. Authorize
 
 AuthorizeSpace   oss.authorize
 UnAuthorizeSpace  oss.cancelAuthorize()
@@ -24,7 +24,7 @@ QuaryAuthorizedAccount  oss.authorityList
 
 
 
-### 3. Bucket管理
+### 3. Bucket
 
 QueryBucketList   fileBank.userBucketList
 QueryBucketInfo   fileBank.bucket
@@ -32,18 +32,16 @@ CreateBucket  fileBank.createBucket
 DeleteBucket  fileBank.deleteBucket
 
 
-### 4. 文件管理
+### 4. File
 
 FileList   userHoldFileList(AccountId32)
 QueryFileMetadata  fileBank.file
 StoreFile
 DeleteFile  fileBank.deleteFile
-RetrieveFile  下载
+DownloadFile
 
 
 
-
-https://github.com/CESSProject/cess-go-sdk/blob/main/core/sdk/sdk.go
 
 
 

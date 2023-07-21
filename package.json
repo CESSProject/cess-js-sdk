@@ -1,14 +1,15 @@
 {
-  "name": "cess-js-sdk-for-nodejs",
-  "version": "0.6.0",
+  "name": "cess-js-sdk",
+  "version": "0.6.1",
   "description": "A js-sdk for Cess Project with file storage",
   "main": "index.js",
+  "module":"index.mjs",
   "scripts": {
     "test": "./test/"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CESSProject/cess-js-sdk-for-nodejs.git"
+    "url": "https://github.com/CESSProject/cess-js-sdk.git"
   },
   "homepage": "https://www.cess.cloud",
   "keywords": [

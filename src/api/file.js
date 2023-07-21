@@ -10,7 +10,7 @@ module.exports = class File extends ControlBase {
   async queryFileList(accountId32) {
     try {
       await this.api.isReady;
-      let ret = await this.api.query.fileBank.userHoldFileList(accountId32);
+      let ret = await this.api.query.fileBank.file(accountId32);
       let data = ret.toHuman();
       return {
         msg: "ok",
@@ -29,7 +29,14 @@ module.exports = class File extends ControlBase {
     try {
       await this.api.isReady;
       let ret = await this.api.query.fileBank.file(fileHash);
+      let hu = ret.toHuman();
       let data = ret.toJSON();
+      if (data && data.owner && data.owner.length > 0) {
+        for (let i = 0; i < data.owner.length; i++) {
+          data.owner[i].fileName = hu.owner[i].fileName;
+          data.owner[i].bucketName = hu.owner[i].bucketName;
+        }
+      }
       return {
         msg: "ok",
         data,
@@ -70,27 +77,6 @@ module.exports = class File extends ControlBase {
     let ret = await fileHelper.download(url, savePath, this.log);
     return ret;
   }
-  // async downloadFile(fileHash, savePath) {
-  //   return new Promise(async (resolve, reject) => {
-  //     try {
-  //       let url = config.gateway.url + fileHash;
-  //       axios({
-  //         method: "get",
-  //         url: url,
-  //         responseType: "stream",
-  //         headers: {
-  //           Operation: "download",
-  //         },
-  //       }).then(function (response) {
-  //         response.data.pipe(fs.createWriteStream(savePath));
-  //         resolve({msg:'ok',data:savePath})
-  //       });
-  //     } catch (e) {
-  //       console.log(e);
-  //       reject(e.message);
-  //     }
-  //   });
-  // }
   async deleteFile(mnemonic, accountId32, fileHashArray) {
     await this.api.isReady;
     const extrinsic = this.api.tx.fileBank.deleteFile(

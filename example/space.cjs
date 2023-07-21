@@ -1,34 +1,16 @@
-# cess-js-sdk
-
-## About
-
-A js-sdk for Cess Project with file storage
-
-
-## Install
-
-### npm
-```bash
-npm i cess-js-sdk --save
-```
-
-### or yarn
-
-```bash
-yarn add cess-js-sdk -S
-```
-
-## Use
-
-```javascript
-const { Space, InitAPI, Common } = require("cess-js-sdk");
-// or for ES6
-// import { Space, InitAPI, Common} from "../index.mjs";
+const { Space, InitAPI, Common } = require("../");
 const { api, keyring } = InitAPI();
+const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
+const accountId32_2 = "cXgdDQ65sFMX7hB9EbF42nys6XxSFLMTeQK2RoQkoopn26kXZ";
+const mnemonic =
+  "denial empower wear venue distance leopard lamp source off other twelve permit";
+let result = "";
+
+console.log('mjs');
 
 const space = new Space(api, keyring, true);
 const common = new Common(api, keyring, true);
-async function main() {
+async function testSpace() {
   try {
     console.log("==============query userOwnedSpace=======================");
     result = await space.userOwnedSpace(accountId32);
@@ -60,27 +42,4 @@ async function main() {
   }
 }
 
-main();
-
-```
-
-### CESS test network rpc endpoints
-
-```sh
-wss://testnet-rpc0.cess.cloud/ws/
-wss://testnet-rpc1.cess.cloud/ws/
-wss://testnet-rpc2.cess.cloud/ws/
-```
-
-
-###  CESS test network faucet
-
-```sh
-https://testnet-faucet.cess.cloud/
-```
-
-### CESS test network public gateway
-```sh
-Address ： https://deoss-pub-gateway.cess.cloud/
-Account ： cXhwBytXqrZLr1qM5NHJhCzEMckSTzNKw17ci2aHft6ETSQm9
-```
+testSpace();

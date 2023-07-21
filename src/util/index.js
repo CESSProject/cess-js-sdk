@@ -1,20 +1,7 @@
-/*
- * @Description:
- * @Autor: fage
- * @Date: 2022-05-11 09:29:25
- * @LastEditors: fage
- * @LastEditTime: 2022-07-08 17:49:30
- */
 const bs58 = require("bs58");
-const path = require("path");
 
-module.exports = {
-  uint8ArrayToString,
-  uint8ArrayToIP,
-  base58ToIP,
-  stringToByte,
-  byteToString
-};
+const uint8ArrayToHex = (bytes) =>
+  '0x'+bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
 function uint8ArrayToString(u8arr) {
   var dataString = "";
   for (var i = 0; i < u8arr.length; i++) {
@@ -76,3 +63,12 @@ function byteToString(arr) {
   }
   return str;
 }
+
+module.exports = {
+  uint8ArrayToString,
+  uint8ArrayToHex,
+  uint8ArrayToIP,
+  base58ToIP,
+  stringToByte,
+  byteToString,
+};
