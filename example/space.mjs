@@ -10,7 +10,7 @@ import { Space, InitAPI, Common} from "../index.mjs";
 const { api, keyring } = InitAPI();
 const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
 const mnemonic =
-  "denial empower wear venue distance leopard lamp source off other twelve permit";
+  "";
 let result = "";
 
 console.log('mjs');

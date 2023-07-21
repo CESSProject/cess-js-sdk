@@ -4,6 +4,8 @@
 
 A js-sdk for Cess Project with file storage
 
+Support for use in node.js and browsers
+
 
 ## Install
 
@@ -23,7 +25,7 @@ yarn add cess-js-sdk -S
 ```javascript
 const { Space, InitAPI, Common } = require("cess-js-sdk");
 // or for ES6
-// import { Space, InitAPI, Common} from "../index.mjs";
+// import { Space, InitAPI, Common} from "cess-js-sdk";
 const { api, keyring } = InitAPI();
 
 const space = new Space(api, keyring, true);
