@@ -1,9 +1,10 @@
 const ControlBase = require("../control-base");
+const defaultConfig = require("../config");
 
 module.exports = class Authorize extends ControlBase {
   constructor(api, keyring, isDebug) {
     super(api, keyring, isDebug);
-  }  
+  }
   async authorityList(accountId32) {
     try {
       await this.api.isReady;
@@ -22,8 +23,11 @@ module.exports = class Authorize extends ControlBase {
       };
     }
   }
-  async authorize(mnemonic,operator) {
+  async authorize(mnemonic, operator) {
     await this.api.isReady;
+    if (!operator) {
+      operator = defaultConfig.gateway.account;
+    }
     const extrinsic = this.api.tx.oss.authorize(operator);
     return await this.signAndSend(mnemonic, extrinsic);
   }
@@ -31,5 +35,5 @@ module.exports = class Authorize extends ControlBase {
     await this.api.isReady;
     const extrinsic = this.api.tx.oss.cancelAuthorize();
     return await this.signAndSend(mnemonic, extrinsic);
-  } 
+  }
 };
