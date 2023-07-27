@@ -11,12 +11,12 @@ const oss = new Bucket(api, keyring, true);
 async function main() {
   try {
     console.log("==============queryBucketList=======================");
-    result = await oss.queryBucketList(accountId32);
+    result = await oss.queryBucketList3(accountId32);
     console.log(result.data);
     if (result.msg != "ok") {
       return console.log(result);
     }
-    // return ;
+    return ;
 
     if (result.data == null || result.data.length == 0) {
       console.log("==============createBucket=======================");
@@ -25,8 +25,9 @@ async function main() {
     } else {
       console.log("==============queryBucketInfo=======================");
       let name = result.data[0];
-      result = await oss.queryBucketInfo(accountId32, name);
+      result = await oss.queryBucketInfo(accountId32);
       console.log(result);
+      return ;
 
       result = await oss.deleteBucket(mnemonic,accountId32, name);
       console.log(result);

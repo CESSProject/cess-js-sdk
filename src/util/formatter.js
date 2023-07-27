@@ -1,13 +1,29 @@
 const _ = require("lodash");
 
-module.exports={
+module.exports = {
+  formatEntries,
   formatterSize,
   formatterSize2,
   formatBalance,
   formatAddress,
   formatAddressLong,
   fixed,
-  formatTime
+  formatTime,
+};
+function formatEntries(result, isNeedSourceKey) {
+  return result.map(([key, entry]) => {
+    let ids = key.args.map((k) => k.toHuman());
+    let id = ids[0];
+
+    let humanObj = entry.toJSON();
+    if (ids.length > 0) {
+      humanObj.ids = ids;
+    }
+    if (isNeedSourceKey) {
+      return _.assign(humanObj, { key: id, sourceKey: key });
+    }
+    return _.assign(humanObj, { key: id });
+  });
 }
 
 function formatterSize(size) {
@@ -15,8 +31,8 @@ function formatterSize(size) {
   return obj.size + " " + obj.ext;
 }
 function formatterSize2(size) {
-  let count=size;
-  if(!count){
+  let count = size;
+  if (!count) {
     // console.log('!count',count);
     return "0 KiB";
   }
@@ -24,7 +40,7 @@ function formatterSize2(size) {
     count = _.toNumber(count);
   }
   if (count === 0) return "0 KiB";
-  let k = 1024; 
+  let k = 1024;
   let currencyStr = [
     "iB",
     "KiB",
@@ -36,7 +52,7 @@ function formatterSize2(size) {
     "ZiB",
     "YiB",
   ];
-  let i = 0; 
+  let i = 0;
   for (let l = 0; l < 8; l++) {
     if (count / Math.pow(k, l) < 1) {
       break;
