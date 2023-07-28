@@ -6,7 +6,7 @@ module.exports = class Authorize extends ControlBase {
     super(api, keyring, isDebug);
   }
   async authorityList(accountId32) {
-    try {
+    try {      
       await this.api.isReady;
       let ret = await this.api.query.oss.authorityList(accountId32);
       let data = ret.toJSON();

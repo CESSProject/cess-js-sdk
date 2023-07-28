@@ -2,16 +2,52 @@ const ControlBase = require("../control-base");
 const config = require("../config");
 const fileHelper = require("../util/file-helper");
 const bs58 = require("bs58");
+const { formatterSize } = require("../util/formatter");
 
 module.exports = class File extends ControlBase {
   constructor(api, keyring, isDebug) {
     super(api, keyring, isDebug);
   }
+  async queryFileListFull(accountId32) {
+    try {
+      let ret =await this.queryFileList(accountId32);
+      if(ret.msg!='ok'){
+        return ret;
+      }
+      for(let file of ret.data){
+        let tmp=await this.queryFileMetadata(file.fileHash);
+        if(tmp.msg=='ok'){
+          // console.log(tmp.data.owner);
+          let owe=tmp.data.owner.find(t=>t.user==accountId32);
+          if(owe){
+            file.fileName=owe.fileName;
+            file.bucketName=owe.bucketName;            
+          }
+          file.fileSizeStr = formatterSize(tmp.data.fileSize);
+          file.stat=tmp.data.stat;
+        }
+      }
+      return ret;
+    } catch (error) {
+      console.error(error);
+      return {
+        msg: "ok",
+        errMsg: error.message,
+        error: JSON.stringify(error),
+      };
+    }
+  }
   async queryFileList(accountId32) {
     try {
       await this.api.isReady;
-      let ret = await this.api.query.fileBank.file(accountId32);
-      let data = ret.toHuman();
+      let ret = await this.api.query.fileBank.userHoldFileList(accountId32);
+      let data2 = ret.toHuman();
+      let data = ret.toJSON();
+      let list = [];
+      data.forEach((t, i) => {
+        t.fileHash = data2[i].fileHash;
+        t.fileSizeStr = formatterSize(t.fileSize);
+      });
       return {
         msg: "ok",
         data,

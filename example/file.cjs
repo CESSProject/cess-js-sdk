@@ -1,9 +1,9 @@
-const { File, InitAPI, Common } = require("../index.cjs");
+const { File, InitAPI, Common } = require("../index.js");
 
 const config = require("../src/config");
 const util = require("../src/util/index");
 const { api, keyring } = InitAPI();
-const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
+const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";//5EAVXkeQX5YC9yVU31kcB1hHi4WVudxo8RSXgmohQQBSg4uq
 const accountId32_2 = "cXgdDQ65sFMX7hB9EbF42nys6XxSFLMTeQK2RoQkoopn26kXZ";
 const mnemonic =
   "";
@@ -15,7 +15,7 @@ const common = new Common(api, keyring, true);
 async function queryFileList() {
   try {
     console.log("==============queryFileList=======================");
-    result = await oss.queryFileList(accountId32);
+    result = await oss.queryFileListFull(accountId32);
     console.log(result.data);
     if (result.msg != "ok") {
       return console.log(result);
@@ -44,7 +44,7 @@ async function downloadFile() {
   try {
     console.log("==============downloadFile=======================");
     let fileHash =
-      "518d28bf84caf9254f57f938d3814e7e18578cab9197b2bf5e071c38fe977f60";
+      "2079b3ca8d5261c012cca20e955f0d0a8afe1cca9bb3c023a9527504477802dc";
     result = await oss.downloadFile(fileHash, "./file/down/a.txt");
     console.log(result.data);
     if (result.msg != "ok") {
@@ -85,8 +85,8 @@ async function deleteFile() {
     console.log(e);
   }
 }
-queryFileList();
+// queryFileList();
 // uploadFile();
-// downloadFile();
+downloadFile();
 // queryFileMetadata();
 // deleteFile();

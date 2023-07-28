@@ -95,10 +95,11 @@ function downloadForNodejs(url, savePath, log) {
 }
 async function upload(url, filePath, header, log) {
   let result = "";
+  console.log({isBrower})
   if (isBrower) {
     result = await uploadForBrower(url, filePath, header, log);
   } else {
-    result = await uploadForNodejs(url, filePath, header, log);
+    // result = await uploadForNodejs(url, filePath, header, log);
   }
   return result;
 }

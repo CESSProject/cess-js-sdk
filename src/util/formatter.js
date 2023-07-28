@@ -10,12 +10,12 @@ module.exports = {
   fixed,
   formatTime,
 };
-function formatEntries(result, isNeedSourceKey) {
+function formatEntries(result, isNeedSourceKey, isToJson) {
   return result.map(([key, entry]) => {
     let ids = key.args.map((k) => k.toHuman());
     let id = ids[0];
 
-    let humanObj = entry.toJSON();
+    let humanObj = isToJson ? entry.toJSON() : entry.toHuman();
     if (ids.length > 0) {
       humanObj.ids = ids;
     }

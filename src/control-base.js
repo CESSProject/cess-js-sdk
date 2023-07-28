@@ -2,6 +2,8 @@ let web3Enable = () => [];
 let web3FromAddress = () => {
   return {};
 };
+let web3Accounts = () => {};
+let web3FromSource = () => {};
 const isBrower =
   typeof window != "undefined" && typeof window.document != "undefined";
 
@@ -9,8 +11,11 @@ if (isBrower) {
   const extension = require("@polkadot/extension-dapp");
   web3Enable = extension.web3Enable;
   web3FromAddress = extension.web3FromAddress;
+  web3Accounts = extension.web3Accounts;
+  web3FromSource = extension.web3FromSource;
 }
 const util = require("../src/util/index");
+const { stringToHex } = require("@polkadot/util");
 
 module.exports = class ControlBase {
   constructor(api, keyring, isDebug) {
@@ -152,25 +157,53 @@ module.exports = class ControlBase {
     });
   }
   async authSign(mnemonic, msg) {
-    await this.api.isReady;
-    let kr = this.keyring;
-    const pair = kr.createFromUri(mnemonic);
-    kr.setSS58Format(11330);
-    const publicKeyU8A = pair.publicKey;
-    // console.log("publicKeyU8A", publicKeyU8A);
-    const ss58 = pair.address;
-    const signU8A = pair.sign(msg);
-    // console.log("signU8A", signU8A);
-    const publicKeyStr = util.uint8ArrayToHex(publicKeyU8A);
-    const signStr = util.uint8ArrayToHex(signU8A);
-    return {
-      mnemonic,
-      msg,
-      publicKeyU8A,
-      publicKeyStr,
-      signU8A,
-      signStr,
-      ss58,
-    };
+    if (isBrower) {
+      const extensions = await web3Enable("my cool dapp");
+      const allAccounts = await web3Accounts();
+      console.log({ allAccounts });
+      allAccounts.forEach((t) => {
+        t.address = this.formatAccountId(t.address);
+      });
+      const account = allAccounts.find((t) => t.address == mnemonic);
+      const injector = await web3FromSource(account.meta.source);
+      const signRaw = injector?.signer?.signRaw;
+      const { signature } = await signRaw({
+        address: account.address,
+        data: stringToHex(msg),
+        type:"Uint8Array",
+      });
+      return {
+        signU8A: signature,
+      };
+    } else {
+      await this.api.isReady;
+      let kr = this.keyring;
+      const pair = kr.createFromUri(mnemonic);
+      kr.setSS58Format(11330);
+      const publicKeyU8A = pair.publicKey;
+      // console.log("publicKeyU8A", publicKeyU8A);
+      const ss58 = pair.address;
+      const signU8A = pair.sign(msg);
+      // console.log("signU8A", signU8A);
+      const publicKeyStr = util.uint8ArrayToHex(publicKeyU8A);
+      const signStr = util.uint8ArrayToHex(signU8A);
+      return {
+        mnemonic,
+        msg,
+        publicKeyU8A,
+        publicKeyStr,
+        signU8A,
+        signStr,
+        ss58,
+      };
+    }
+  }
+  formatAccountId(accountId32) {
+    if (!accountId32 || accountId32.length == 64) {
+      return accountId32;
+    }
+    const pair = this.keyring.addFromAddress(accountId32);
+    this.keyring.setSS58Format(11330);
+    return pair.address;
   }
 };

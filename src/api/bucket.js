@@ -5,7 +5,7 @@ module.exports = class Bucket extends ControlBase {
   constructor(api, keyring, isDebug) {
     super(api, keyring, isDebug);
   }
-  async queryBucketList(accountId32) {
+  async queryBucketNames(accountId32) {
     try {
       await this.api.isReady;
       let ret = await this.api.query.fileBank.userBucketList(accountId32);
@@ -23,29 +23,16 @@ module.exports = class Bucket extends ControlBase {
       };
     }
   }
-  async queryBucketList2(accountId32) {
+  async queryBucketList(accountId32) {
     try {
       await this.api.isReady;
-      let ret = await this.api.query.fileBank.bucket.entries();
-      let data = formatEntries(ret);
-      return {
-        msg: "ok",
-        data,
-      };
-    } catch (error) {
-      console.error(error);
-      return {
-        msg: "ok",
-        errMsg: error.message,
-        error: JSON.stringify(error),
-      };
-    }
-  }
-  async queryBucketList3(accountId32) {
-    try {
-      await this.api.isReady;
-      let ret = await this.api.query.fileBank.bucket.keys(accountId32);
-      let data =ret.toJSON()
+      let ret = await this.api.query.fileBank.bucket.entries(accountId32);
+      let data = formatEntries(ret,false,false);
+      data.forEach(t=>{
+        t.key=t.ids[1];
+        delete t.ids;
+        delete t.authority;
+      });
       return {
         msg: "ok",
         data,

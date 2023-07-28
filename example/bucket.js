@@ -11,7 +11,10 @@ const oss = new Bucket(api, keyring, true);
 async function main() {
   try {
     console.log("==============queryBucketList=======================");
-    result = await oss.queryBucketList3(accountId32);
+    let aaa=oss.formatAccountId('5EAVXkeQX5YC9yVU31kcB1hHi4WVudxo8RSXgmohQQBSg4uq');
+    console.log(aaa);
+    return;
+    result = await oss.queryBucketList(accountId32);
     console.log(result.data);
     if (result.msg != "ok") {
       return console.log(result);
