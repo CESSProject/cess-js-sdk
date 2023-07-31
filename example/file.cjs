@@ -6,7 +6,7 @@ const { api, keyring } = InitAPI();
 const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";//5EAVXkeQX5YC9yVU31kcB1hHi4WVudxo8RSXgmohQQBSg4uq
 const accountId32_2 = "cXgdDQ65sFMX7hB9EbF42nys6XxSFLMTeQK2RoQkoopn26kXZ";
 const mnemonic =
-  "";
+  "denial empower wear venue distance leopard lamp source off other twelve permit";
 let result = "";
 
 const oss = new File(api, keyring, true);
@@ -86,7 +86,7 @@ async function deleteFile() {
   }
 }
 // queryFileList();
-// uploadFile();
-downloadFile();
+uploadFile();
+// downloadFile();
 // queryFileMetadata();
 // deleteFile();

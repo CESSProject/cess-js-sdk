@@ -63,6 +63,23 @@ function byteToString(arr) {
   }
   return str;
 }
+function hexStringToUint8Array(hexString) {
+  if(hexString.indexOf('0x')==0){
+    hexString=hexString.replace('0x','');
+  }
+  const length = Math.ceil(hexString.length / 2);
+  const uint8Array = new Uint8Array(length);
+
+  for (let i = 0; i < length; i++) {
+    const startIndex = i * 2;
+    const endIndex = startIndex + 2;
+    const hexValue = hexString.substring(startIndex, endIndex);
+    const byteValue = parseInt(hexValue, 16);
+    uint8Array[i] = byteValue;
+  }
+
+  return uint8Array;
+}
 
 module.exports = {
   uint8ArrayToString,
@@ -71,4 +88,5 @@ module.exports = {
   base58ToIP,
   stringToByte,
   byteToString,
+  hexStringToUint8Array
 };

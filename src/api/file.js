@@ -90,7 +90,14 @@ module.exports = class File extends ControlBase {
     try {
       let message = "cess-js-sdk-" + new Date().valueOf();
       const { signU8A } = await this.authSign(mnemonic, message);
+      console.log({signU8A})
       let sign = bs58.encode(signU8A);
+      if(!sign){
+        console.log('sign error');
+        return {
+          msg:'sign error'
+        }
+      }
       let headers = {};
       headers["BucketName"] = bucketName;
       headers["Account"] = accountId32;

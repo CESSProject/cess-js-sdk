@@ -15,7 +15,12 @@ if (isBrower) {
   web3FromSource = extension.web3FromSource;
 }
 const util = require("../src/util/index");
-const { stringToHex } = require("@polkadot/util");
+const {
+  stringToHex,
+  stringToU8a,
+  hexToU8a,
+  u8aToHex,
+} = require("@polkadot/util");
 
 module.exports = class ControlBase {
   constructor(api, keyring, isDebug) {
@@ -157,23 +162,34 @@ module.exports = class ControlBase {
     });
   }
   async authSign(mnemonic, msg) {
-    if (isBrower) {
+    if (isBrower && mnemonic.length < 55) {
       const extensions = await web3Enable("my cool dapp");
       const allAccounts = await web3Accounts();
-      console.log({ allAccounts });
+
       allAccounts.forEach((t) => {
+        // t.setSS58Format(11330);
         t.address = this.formatAccountId(t.address);
       });
       const account = allAccounts.find((t) => t.address == mnemonic);
+      if (!account) {
+        console.log("account not found!");
+        return { msg: "account not found!" };
+      }
       const injector = await web3FromSource(account.meta.source);
       const signRaw = injector?.signer?.signRaw;
-      const { signature } = await signRaw({
-        address: account.address,
-        data: stringToHex(msg),
-        type:"Uint8Array",
-      });
+      let signatureU8a = "";
+      if (!!signRaw) {
+        // after making sure that signRaw is defined
+        // we can use it to sign our message
+        const { signature } = await signRaw({
+          address: account.address,
+          data: stringToHex(msg),
+          type: "bytes",
+        });
+        signatureU8a = hexToU8a(signature);
+      }
       return {
-        signU8A: signature,
+        signU8A: signatureU8a,
       };
     } else {
       await this.api.isReady;

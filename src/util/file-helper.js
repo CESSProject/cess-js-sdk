@@ -4,6 +4,7 @@ const axios = require("axios");
 
 const isBrower =
   typeof window != "undefined" && typeof window.document != "undefined";
+  
 async function download(url, savePath, log) {
   let result = "";
   if (isBrower) {
@@ -95,11 +96,11 @@ function downloadForNodejs(url, savePath, log) {
 }
 async function upload(url, filePath, header, log) {
   let result = "";
-  console.log({isBrower})
+  console.log({ isBrower });
   if (isBrower) {
     result = await uploadForBrower(url, filePath, header, log);
   } else {
-    // result = await uploadForNodejs(url, filePath, header, log);
+    result = await uploadForNodejs(url, filePath, header, log);
   }
   return result;
 }
@@ -109,23 +110,25 @@ async function uploadForBrower(url, file, header, log) {
       const formData = new FormData();
       formData.append("file", file);
       log("uploading to ", url);
-      axios
-        .put(url, formData, {
-          headers:header,
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            log(`Completed：${percentCompleted}%`);
-          },
-        })
-        .then((res) => {
-          resolve({ msg: "ok", data: res.data });
-        })
-        .catch((error) => {
-          console.error("Download fail：", error);
-          reject(error);
-        });
+
+      const xhr = new XMLHttpRequest();  
+      xhr.open("PUT", url, true);  
+      // 设置请求头，根据需要添加其他请求头参数
+      Object.keys(header).forEach((key) => {
+        xhr.setRequestHeader(key, header[key]);
+      });
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          let data=xhr.response.split('"').join('');
+          resolve({ msg: "ok", data});
+        } else {
+          reject(Error(xhr.statusText));
+        }
+      };  
+      xhr.onerror = function () {
+        reject(Error("Network Error"));
+      };  
+      xhr.send(formData);
     } catch (e) {
       log(e);
       reject(e.message);
