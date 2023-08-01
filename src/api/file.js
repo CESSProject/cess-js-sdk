@@ -3,6 +3,12 @@ const config = require("../config");
 const fileHelper = require("../util/file-helper");
 const bs58 = require("bs58");
 const { formatterSize } = require("../util/formatter");
+const {
+  stringToHex,
+  hexToString,
+  hexToU8a,
+  u8aToHex,
+} = require("@polkadot/util");
 
 module.exports = class File extends ControlBase {
   constructor(api, keyring, isDebug) {
@@ -10,21 +16,21 @@ module.exports = class File extends ControlBase {
   }
   async queryFileListFull(accountId32) {
     try {
-      let ret =await this.queryFileList(accountId32);
-      if(ret.msg!='ok'){
+      let ret = await this.queryFileList(accountId32);
+      if (ret.msg != "ok") {
         return ret;
       }
-      for(let file of ret.data){
-        let tmp=await this.queryFileMetadata(file.fileHash);
-        if(tmp.msg=='ok'){
+      for (let file of ret.data) {
+        let tmp = await this.queryFileMetadata(file.fileHash);
+        if (tmp.msg == "ok") {
           // console.log(tmp.data.owner);
-          let owe=tmp.data.owner.find(t=>t.user==accountId32);
-          if(owe){
-            file.fileName=owe.fileName;
-            file.bucketName=owe.bucketName;            
+          let owe = tmp.data.owner.find((t) => t.user == accountId32);
+          if (owe) {
+            file.fileName = owe.fileName;
+            file.bucketName = owe.bucketName;
           }
           file.fileSizeStr = formatterSize(tmp.data.fileSize);
-          file.stat=tmp.data.stat;
+          file.stat = tmp.data.stat;
         }
       }
       return ret;
@@ -69,7 +75,13 @@ module.exports = class File extends ControlBase {
       let data = ret.toJSON();
       if (data && data.owner && data.owner.length > 0) {
         for (let i = 0; i < data.owner.length; i++) {
-          data.owner[i].fileName = hu.owner[i].fileName;
+          let n = hu.owner[i].fileName;
+          if (n.indexOf("0x") == 0) {
+            try {
+              n = hexToString(n);
+            } catch (ee) {}
+          }
+          data.owner[i].fileName = n;
           data.owner[i].bucketName = hu.owner[i].bucketName;
         }
       }
@@ -90,13 +102,13 @@ module.exports = class File extends ControlBase {
     try {
       let message = "cess-js-sdk-" + new Date().valueOf();
       const { signU8A } = await this.authSign(mnemonic, message);
-      console.log({signU8A})
+      console.log({ signU8A });
       let sign = bs58.encode(signU8A);
-      if(!sign){
-        console.log('sign error');
+      if (!sign) {
+        console.log("sign error");
         return {
-          msg:'sign error'
-        }
+          msg: "sign error",
+        };
       }
       let headers = {};
       headers["BucketName"] = bucketName;
