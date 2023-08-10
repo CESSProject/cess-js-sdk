@@ -34,7 +34,7 @@ module.exports = class Common extends ControlBase {
       let s = (obj.deadline - blockHeight) * 6;
       let time = moment().add(s, "s");
       obj.deadlineTime = time.format("YYYY-MM-DD HH:mm:ss");
-      obj.RemainingDays = parseInt(s / 86400);
+      obj.remainingDays = parseInt(s / 86400);
     }
   }
 };
