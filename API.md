@@ -1,52 +1,48 @@
 # API Docs
 
 ## List
+
 1. Space
 2. Authorize
 3. Bucke
 4. File
 
-
-
 ### 1. Space
 
-userOwnedSpace storageHandler.userOwnedSpace(AccountId32)
-BuySpace   storageHandler.buySpace(gibCount)
-ExpansionSpace   storageHandler.expansionSpace(gibCount)
-RenewalSpace  storageHandler.renewalSpace(days)
+userOwnedSpace(AccountId32)
 
+buySpace(gibCount)
+
+expansionSpace(gibCount)
+
+renewalSpace(days)
 
 ### 2. Authorize
 
-AuthorizeSpace   oss.authorize
-UnAuthorizeSpace  oss.cancelAuthorize()
-QuaryAuthorizedAccount  oss.authorityList
+authorityList(accountId32)
 
+authorize(mnemonic,config.gateway.account)
 
+cancelAuthorize(mnemonic)
 
 ### 3. Bucket
 
-QueryBucketList   fileBank.userBucketList
-QueryBucketInfo   fileBank.bucket
-CreateBucket  fileBank.createBucket
-DeleteBucket  fileBank.deleteBucket
+queryBucketList(accountId32)
 
+createBucket(mnemonic, accountId32, buckname)
+
+queryBucketInfo(accountId32)
+
+deleteBucket(mnemonic,accountId32, buckname)
 
 ### 4. File
 
-FileList   userHoldFileList(AccountId32)
-QueryFileMetadata  fileBank.file
-StoreFile
-DeleteFile  fileBank.deleteFile
-DownloadFile
+queryFileListFull(accountId32)
 
+queryFileMetadata(fileHash)
 
+uploadFile(mnemonic, accountId32, filePath, bucketName)
 
+downloadFile(fileHash, savePath)
 
-
-
-
-
-
-
-
+deleteFile(mnemonic, accountId32, [fileHash])

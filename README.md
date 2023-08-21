@@ -4,8 +4,9 @@
 
 A js-sdk for Cess Project with file storage
 
-Support for use in node.js and browsers
+Supports CommonJS and ES Module import type
 
+Support for use in node.js and browsers,use in browser, it is necessary to install the Polkadot wallet plugin in the browser https://polkadot.js.org/extension/
 
 ## Install
 
