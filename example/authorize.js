@@ -3,12 +3,10 @@ const { Authorize, InitAPI } = require("../");
 const config = require("../src/config");
 const { api, keyring } = InitAPI();
 const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-const mnemonic =
-  "";
+const mnemonic = "";
 let result = "";
 
 const oss = new Authorize(api, keyring, true);
-
 
 async function main() {
   try {
@@ -17,9 +15,9 @@ async function main() {
     console.log(result.data);
     // return ;
 
-    if (result.data==null) {
+    if (!result.data || result.data.length == 0) {
       console.log("==============authorize=======================");
-      result = await oss.authorize(mnemonic,config.gateway.account);
+      result = await oss.authorize(mnemonic, config.gateway.account);
       console.log(result);
     } else {
       console.log("==============cancelAuthorize=======================");
