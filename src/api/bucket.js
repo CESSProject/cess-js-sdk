@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const ControlBase = require("../control-base");
 const { formatEntries } = require("../util/formatter");
 

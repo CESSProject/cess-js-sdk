@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 if (typeof global != "undefined") {
   global.window = { isNode: true };
 } else {

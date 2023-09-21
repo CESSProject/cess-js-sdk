@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const { Authorize, InitAPI } = require("../");
 
 const config = require("../src/config");

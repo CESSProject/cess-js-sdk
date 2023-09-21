@@ -1,3 +1,7 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ */
 import InitAPI from "./src/init-api.js";
 import Common from "./src/api/common.js";
 import Authorize from "./src/api/authorize.js";

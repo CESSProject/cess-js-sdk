@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const { Space, InitAPI, Common } = require("../");
 const { api, keyring } = InitAPI();
 const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";

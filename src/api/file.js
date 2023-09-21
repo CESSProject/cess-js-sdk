@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const ControlBase = require("../control-base");
 const config = require("../config");
 const fileHelper = require("../util/file-helper");

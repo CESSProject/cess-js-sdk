@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const { File, InitAPI, Common } = require("../index.js");
 
 const config = require("../src/config");

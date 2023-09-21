@@ -2,7 +2,7 @@
 
 ## About
 
-A js-sdk for Cess Project with file storage
+JS-SDK for Cess Project with file storage
 
 Supports CommonJS and ES Module import type
 

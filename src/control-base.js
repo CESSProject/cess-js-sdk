@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 let web3Enable = () => [];
 let web3FromAddress = () => {
   return {};

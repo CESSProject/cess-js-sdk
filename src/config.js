@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 module.exports = {
   nodeURL: "wss://testnet-rpc0.cess.cloud/ws/",
   keyringOption: { type: "sr25519", ss58Format: 42 },

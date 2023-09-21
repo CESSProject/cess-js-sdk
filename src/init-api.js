@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const defaultConfig = require("./config");
 const { ApiPromise, WsProvider, Keyring } = require("@polkadot/api");
 

@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const bs58 = require("bs58");
 
 const uint8ArrayToHex = (bytes) =>

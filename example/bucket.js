@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 const { Bucket, InitAPI } = require("../");
 
 const { api, keyring } = InitAPI();

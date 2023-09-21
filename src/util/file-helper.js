@@ -1,3 +1,8 @@
+/*
+ * @Description: js-sdk for cess storage
+ * @Autor: cess lab
+ * 
+ */
 let fs = null;
 let FormDataNode = null;
 const axios = require("axios");
