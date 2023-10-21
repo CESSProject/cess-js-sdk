@@ -10,7 +10,8 @@
   "scripts": {
     "fmt": "prettier --write .",
     "lint": "eslint .",
-    "test:types": "ts-node src/tests/types.ts"
+    "test:types": "ts-node src/tests/types.ts",
+    "validate": "pnpm prettier -c . && pnpm lint && pnpm test:types"
   },
   "repository": {
     "type": "git",
@@ -43,6 +44,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "^18.0.0",
+    "@commitlint/config-conventional": "^18.0.0",
     "@tsconfig/node18": "^18.2.2",
     "@types/node": "^18.18.6",
     "@typescript-eslint/eslint-plugin": "^6.8.0",

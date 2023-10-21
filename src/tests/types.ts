@@ -39,6 +39,9 @@ async function main() {
   common.formatSpaceInfo(initSpaceData, blockHeight);
   console.log("initial user space:", initSpaceData);
 
+  if (process.env.CI === "true") return;
+
+  // The following code writes to CESS blockchain. Run only when not in CI (github action) mode.
   if (initSpaceData.totalSpace) {
     console.log("expansionSpace:", await space.expansionSpace(mnemonic, RENT_SPACE));
     console.log("renewalSpace:", await space.renewalSpace(mnemonic, RENEWAL_LEN));
