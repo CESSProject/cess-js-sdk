@@ -1,17 +1,23 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
+ *
  */
-const { Space, InitAPI, Common } = require("../");
+if (typeof global != "undefined") {
+  global.window = { isNode: true };
+} else {
+  window.global = { isNode: false };
+}
+
+console.log(window);
+
+import { Space, InitAPI, Common } from "../index.mjs";
 const { api, keyring } = InitAPI();
 const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
-const accountId32_2 = "cXgdDQ65sFMX7hB9EbF42nys6XxSFLMTeQK2RoQkoopn26kXZ";
-const mnemonic =
-  "";
+const mnemonic = "";
 let result = "";
 
-console.log('mjs');
+console.log("mjs");
 
 const space = new Space(api, keyring, true);
 const common = new Common(api, keyring, true);
@@ -23,7 +29,6 @@ async function testSpace() {
     const blockHeight = await common.queryBlockHeight();
     await common.formatSpaceInfo(result.data, blockHeight);
     console.log(result);
-    // return;
 
     if (result.data?.totalSpace) {
       console.log("==============expansionSpace=======================");

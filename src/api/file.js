@@ -1,22 +1,16 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 const ControlBase = require("../control-base");
 const config = require("../config");
 const fileHelper = require("../util/file-helper");
 const bs58 = require("bs58");
 const { formatterSize } = require("../util/formatter");
-const {
-  stringToHex,
-  hexToString,
-  hexToU8a,
-  u8aToHex,
-} = require("@polkadot/util");
+const { hexToString } = require("@polkadot/util");
 
 module.exports = class File extends ControlBase {
-  constructor(api, keyring, isDebug) {
+  constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
   async queryFileListFull(accountId32) {
@@ -50,11 +44,9 @@ module.exports = class File extends ControlBase {
   }
   async queryFileList(accountId32) {
     try {
-      await this.api.isReady;
       let ret = await this.api.query.fileBank.userHoldFileList(accountId32);
       let data2 = ret.toHuman();
       let data = ret.toJSON();
-      let list = [];
       data.forEach((t, i) => {
         t.fileHash = data2[i].fileHash;
         t.fileSizeStr = formatterSize(t.fileSize);
@@ -74,7 +66,6 @@ module.exports = class File extends ControlBase {
   }
   async queryFileMetadata(fileHash) {
     try {
-      await this.api.isReady;
       let ret = await this.api.query.fileBank.file(fileHash);
       let hu = ret.toHuman();
       let data = ret.toJSON();
@@ -84,7 +75,9 @@ module.exports = class File extends ControlBase {
           if (n.indexOf("0x") == 0) {
             try {
               n = hexToString(n);
-            } catch (ee) {}
+            } catch (e) {
+              console.error(e);
+            }
           }
           data.owner[i].fileName = n;
           data.owner[i].bucketName = hu.owner[i].bucketName;
@@ -120,12 +113,7 @@ module.exports = class File extends ControlBase {
       headers["Account"] = accountId32;
       headers["Message"] = message;
       headers["Signature"] = sign;
-      let ret = await fileHelper.upload(
-        config.gateway.url,
-        filePath,
-        headers,
-        this.log
-      );
+      let ret = await fileHelper.upload(config.gateway.url, filePath, headers, this.log);
       return ret;
     } catch (e) {
       console.log(e);
@@ -138,11 +126,7 @@ module.exports = class File extends ControlBase {
     return ret;
   }
   async deleteFile(mnemonic, accountId32, fileHashArray) {
-    await this.api.isReady;
-    const extrinsic = this.api.tx.fileBank.deleteFile(
-      accountId32,
-      fileHashArray
-    );
+    const extrinsic = this.api.tx.fileBank.deleteFile(accountId32, fileHashArray);
     return await this.signAndSend(mnemonic, extrinsic);
   }
 };

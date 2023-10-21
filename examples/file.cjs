@@ -1,21 +1,16 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
+ *
  */
-const { File, InitAPI, Common } = require("../index.js");
+const { File, InitAPI } = require("../index.js");
 
-const config = require("../src/config");
-const util = require("../src/util/index");
 const { api, keyring } = InitAPI();
-const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";//5EAVXkeQX5YC9yVU31kcB1hHi4WVudxo8RSXgmohQQBSg4uq
-const accountId32_2 = "cXgdDQ65sFMX7hB9EbF42nys6XxSFLMTeQK2RoQkoopn26kXZ";
-const mnemonic =
-  "";
+const accountId32 = "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe";
+const mnemonic = "";
 let result = "";
 
 const oss = new File(api, keyring, true);
-const common = new Common(api, keyring, true);
 
 async function queryFileList() {
   try {
@@ -48,8 +43,7 @@ async function uploadFile() {
 async function downloadFile() {
   try {
     console.log("==============downloadFile=======================");
-    let fileHash =
-      "2079b3ca8d5261c012cca20e955f0d0a8afe1cca9bb3c023a9527504477802dc";
+    let fileHash = "2079b3ca8d5261c012cca20e955f0d0a8afe1cca9bb3c023a9527504477802dc";
     result = await oss.downloadFile(fileHash, "./file/down/a.txt");
     console.log(result.data);
     if (result.msg != "ok") {
@@ -63,8 +57,7 @@ async function downloadFile() {
 async function queryFileMetadata() {
   try {
     console.log("==============queryFileMetadata=======================");
-    let fileHash =
-      "d8dbf99e9ed4fed5db4f5cb945410177d47bcdab9d99e04f33c116655f8c7656";
+    let fileHash = "d8dbf99e9ed4fed5db4f5cb945410177d47bcdab9d99e04f33c116655f8c7656";
     result = await oss.queryFileMetadata(fileHash);
     console.log(result.data);
     if (result.msg != "ok") {
@@ -78,8 +71,7 @@ async function queryFileMetadata() {
 async function deleteFile() {
   try {
     console.log("==============deleteFile=======================");
-    let fileHash =
-      "d8dbf99e9ed4fed5db4f5cb945410177d47bcdab9d99e04f33c116655f8c7656";
+    let fileHash = "d8dbf99e9ed4fed5db4f5cb945410177d47bcdab9d99e04f33c116655f8c7656";
     result = await oss.deleteFile(mnemonic, accountId32, [fileHash]);
     console.log(result.data);
     if (result.msg != "ok") {
@@ -90,8 +82,8 @@ async function deleteFile() {
     console.log(e);
   }
 }
-// queryFileList();
+queryFileList();
 uploadFile();
-// downloadFile();
-// queryFileMetadata();
-// deleteFile();
+downloadFile();
+queryFileMetadata();
+deleteFile();

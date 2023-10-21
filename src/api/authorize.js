@@ -1,18 +1,16 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 const ControlBase = require("../control-base");
 const defaultConfig = require("../config");
 
 module.exports = class Authorize extends ControlBase {
-  constructor(api, keyring, isDebug) {
+  constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
   async authorityList(accountId32) {
-    try {      
-      await this.api.isReady;
+    try {
       let ret = await this.api.query.oss.authorityList(accountId32);
       let data = ret.toJSON();
       return {
@@ -29,7 +27,6 @@ module.exports = class Authorize extends ControlBase {
     }
   }
   async authorize(mnemonic, operator) {
-    await this.api.isReady;
     if (!operator) {
       operator = defaultConfig.gateway.account;
     }
@@ -37,7 +34,6 @@ module.exports = class Authorize extends ControlBase {
     return await this.signAndSend(mnemonic, extrinsic);
   }
   async cancelAuthorize(mnemonic) {
-    await this.api.isReady;
     const extrinsic = this.api.tx.oss.cancelAuthorize();
     return await this.signAndSend(mnemonic, extrinsic);
   }

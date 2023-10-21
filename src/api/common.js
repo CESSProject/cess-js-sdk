@@ -1,18 +1,16 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 const ControlBase = require("../control-base");
 const formatter = require("../util/formatter");
 const moment = require("moment");
 
 module.exports = class Common extends ControlBase {
-  constructor(api, keyring, isDebug) {
+  constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
   async queryBlockHeight() {
-    await this.api.isReady;
     let ret = await this.api.query.system.number();
     let blockHeight = ret.toJSON();
     return blockHeight;

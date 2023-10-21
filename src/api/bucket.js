@@ -1,13 +1,12 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 const ControlBase = require("../control-base");
 const { formatEntries } = require("../util/formatter");
 
 module.exports = class Bucket extends ControlBase {
-  constructor(api, keyring, isDebug) {
+  constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
   async queryBucketNames(accountId32) {
@@ -32,9 +31,9 @@ module.exports = class Bucket extends ControlBase {
     try {
       await this.api.isReady;
       let ret = await this.api.query.fileBank.bucket.entries(accountId32);
-      let data = formatEntries(ret,false,false);
-      data.forEach(t=>{
-        t.key=t.ids[1];
+      let data = formatEntries(ret, false, false);
+      data.forEach((t) => {
+        t.key = t.ids[1];
         delete t.ids;
         delete t.authority;
       });

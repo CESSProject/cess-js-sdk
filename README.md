@@ -2,72 +2,76 @@
 
 ## About
 
-JS-SDK for Cess Project with file storage
+JS-SDK for Cess Project with file storage.
 
-Supports CommonJS and ES Module import type
+Supports CommonJS and ES Module import type.
 
-Support for use in node.js and browsers,use in browser, it is necessary to install the Polkadot wallet plugin in the browser https://polkadot.js.org/extension/
+Support usage in both node.js and browsers. If used in browser, please install the [Polkadot.js extension](https://polkadot.js.org/extension/) in the browser.
 
-## Install
+## Installation
 
-### npm
 ```bash
+# npm
 npm i cess-js-sdk --save
-```
-
-### or yarn
-
-```bash
+# yarn
 yarn add cess-js-sdk -S
+# pnpm
+pnpm add cess-js-sdk
 ```
 
-## Use
+## Example
 
-```javascript
-const { Space, InitAPI, Common } = require("cess-js-sdk");
-// or for ES6
-// import { Space, InitAPI, Common} from "cess-js-sdk";
-const { api, keyring } = InitAPI();
-
-const space = new Space(api, keyring, true);
-const common = new Common(api, keyring, true);
+```ts
 async function main() {
-  try {
-    console.log("==============query userOwnedSpace=======================");
-    result = await space.userOwnedSpace(accountId32);
-    // console.log(result);
-    const blockHeight = await common.queryBlockHeight();
-    await common.formatSpaceInfo(result.data, blockHeight);
-    console.log(result);
-    // return;
+  const { api, keyring } = await InitAPI();
+  console.log("API initialized");
 
-    if (result.data?.totalSpace) {
-      console.log("==============expansionSpace=======================");
-      result = await space.expansionSpace(mnemonic, 1);
-      console.log(result);
+  const [chain, nodeName, nodeVersion] = await Promise.all([
+    api.rpc.system.chain(),
+    api.rpc.system.name(),
+    api.rpc.system.version(),
+  ]);
+  console.log(`Connected to chain ${chain} using ${nodeName} v${nodeVersion}`);
 
-      console.log("==============renewalSpace=======================");
-      result = await space.renewalSpace(mnemonic, 5);
-      console.log(result);
-    } else {
-      console.log("==============buySpace=======================");
-      result = await space.buySpace(mnemonic, 1);
-      console.log(result);
-    }
+  const space = new Space(api, keyring);
+  const common = new Common(api, keyring);
 
-    console.log("==============query userOwnedSpace=======================");
-    result = await space.userOwnedSpace(accountId32);
-    console.log(result);
-  } catch (e) {
-    console.log(e);
+  const balanceEncoded = await api.query.system.account(acctId);
+  const { data } = balanceEncoded.toJSON() as { data: any };
+  console.log(`User: ${acctId}, balance:`, BigInt(data.free));
+
+  const initSpace = await space.userOwnedSpace(acctId);
+  console.log("query userOwnedSpace:", initSpace);
+
+  const blockHeight = await common.queryBlockHeight();
+  console.log("current block height:", blockHeight);
+
+  const { data: initSpaceData } = initSpace;
+  common.formatSpaceInfo(initSpaceData, blockHeight);
+  console.log("initial user space:", initSpaceData);
+
+  if (initSpaceData.totalSpace) {
+    console.log("expansionSpace:", await space.expansionSpace(mnemonic, RENT_SPACE));
+    console.log("renewalSpace:", await space.renewalSpace(mnemonic, RENEWAL_LEN));
+  } else {
+    console.log("buySpace:", await space.buySpace(mnemonic, RENT_SPACE));
   }
+
+  const afterSpace = await space.userOwnedSpace(acctId);
+
+  const { data: afterSpaceData } = afterSpace;
+  common.formatSpaceInfo(afterSpaceData, blockHeight);
+  console.log("user space afterwards:", afterSpaceData);
 }
 
-main();
-
+main()
+  .catch(console.error)
+  .finally(() => process.exit());
 ```
 
-### CESS test network rpc endpoints
+[More examples are here](./examples).
+
+### CESS Testnet RPC Endpoints
 
 ```sh
 wss://testnet-rpc0.cess.cloud/ws/
@@ -75,15 +79,45 @@ wss://testnet-rpc1.cess.cloud/ws/
 wss://testnet-rpc2.cess.cloud/ws/
 ```
 
-
-###  CESS test network faucet
+### CESS Testnet Faucet
 
 ```sh
 https://testnet-faucet.cess.cloud/
 ```
 
-### CESS test network public gateway
+### CESS Testnet Public Gateway
+
 ```sh
 Address ： https://deoss-pub-gateway.cess.cloud/
 Account ： cXhwBytXqrZLr1qM5NHJhCzEMckSTzNKw17ci2aHft6ETSQm9
 ```
+
+## APIs
+
+### Space
+
+- `userOwnedSpace(AccountId32)`
+- `buySpace(gibCount)`
+- `expansionSpace(gibCount)`
+- `renewalSpace(days)`
+
+### Authorize
+
+- `authorityList(accountId32)`
+- `authorize(mnemonic,config.gateway.account)`
+- `cancelAuthorize(mnemonic)`
+
+### Bucket
+
+- `queryBucketList(accountId32)`
+- `createBucket(mnemonic, accountId32, buckname)`
+- `queryBucketInfo(accountId32)`
+- `deleteBucket(mnemonic,accountId32, buckname)`
+
+### File
+
+- `queryFileListFull(accountId32)`
+- `queryFileMetadata(fileHash)`
+- `uploadFile(mnemonic, accountId32, filePath, bucketName)`
+- `downloadFile(fileHash, savePath)`
+- `deleteFile(mnemonic, accountId32, [fileHash])`

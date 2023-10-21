@@ -1,7 +1,6 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 const InitAPI = require("./src/init-api");
 const Common = require("./src/api/common");
@@ -13,8 +12,8 @@ const File = require("./src/api/file");
 module.exports = {
   InitAPI,
   Common,
-  Space, 
+  Space,
   Authorize,
   Bucket,
-  File
+  File,
 };

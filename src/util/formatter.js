@@ -1,7 +1,7 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
+ *
  */
 const _ = require("lodash");
 
@@ -46,17 +46,7 @@ function formatterSize2(size) {
   }
   if (count === 0) return "0 KiB";
   let k = 1024;
-  let currencyStr = [
-    "iB",
-    "KiB",
-    "MiB",
-    "GiB",
-    "TiB",
-    "PiB",
-    "EiB",
-    "ZiB",
-    "YiB",
-  ];
+  let currencyStr = ["iB", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
   let i = 0;
   for (let l = 0; l < 8; l++) {
     if (count / Math.pow(k, l) < 1) {
