@@ -7,7 +7,7 @@ import { execFile } from "node:child_process";
 const EXAMPLE_FILES = [
   "authorize.js",
   "bucket.js",
-  "file.cjs", // need help from CESS team on looking into file.cjs upload/download
+  "file.cjs", // note: need help from CESS team on looking into file.cjs upload/download
   "space.cjs",
   "space.mjs",
 ];
