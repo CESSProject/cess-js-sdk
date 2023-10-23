@@ -1,7 +1,6 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 let web3Enable = () => [];
 let web3FromAddress = () => {
@@ -9,8 +8,7 @@ let web3FromAddress = () => {
 };
 let web3Accounts = () => {};
 let web3FromSource = () => {};
-const isBrower =
-  typeof window != "undefined" && typeof window.document != "undefined";
+const isBrower = typeof window != "undefined" && typeof window.document != "undefined";
 
 if (isBrower) {
   const extension = require("@polkadot/extension-dapp");
@@ -20,32 +18,29 @@ if (isBrower) {
   web3FromSource = extension.web3FromSource;
 }
 const util = require("../src/util/index");
-const {
-  stringToHex,
-  stringToU8a,
-  hexToU8a,
-  u8aToHex,
-} = require("@polkadot/util");
+const { stringToHex, hexToU8a } = require("@polkadot/util");
 
 module.exports = class ControlBase {
-  constructor(api, keyring, isDebug) {
+  constructor(api, keyring, isDebug = false) {
     this.api = api;
     this.keyring = keyring;
     this.debug = isDebug;
   }
+
   log = (...msg) => {
     if (this.debug) {
       console.log(...msg);
     }
   };
+
   error = (...msg) => {
     if (this.debug) {
       console.error(...msg);
     }
   };
+
   async sign(mnemonic, tx) {
     const api = this.api;
-    await api.isReady;
     const pair = this.keyring.createFromUri(mnemonic);
     const { nonce } = await api.query.system.account(pair.address);
     // create the payload
@@ -65,9 +60,10 @@ module.exports = class ControlBase {
     tx.addSignature(pair.address, signature, signer.toPayload());
     return tx.toHex();
   }
+
   async submitTransaction(transaction) {
+    /* eslint-disable-next-line no-async-promise-executor */
     return new Promise(async (resolve, reject) => {
-      await this.api.isReady;
       const api = this.api;
       let tx;
       try {
@@ -83,14 +79,15 @@ module.exports = class ControlBase {
       }
     });
   }
+
   signAndSend(mnemonic, extrinsic) {
+    /* eslint-disable-next-line no-async-promise-executor */
     return new Promise(async (resolve, reject) => {
       try {
         if (mnemonic.length < 55) {
           let result = await this.signAndSendWeb3(mnemonic, extrinsic);
           return resolve(result);
         }
-        await this.api.isReady;
         const pair = this.keyring.createFromUri(mnemonic);
         const extrinsicHash = extrinsic.hash.toHex();
         const unsub = await extrinsic.signAndSend(pair, (result) => {
@@ -113,9 +110,7 @@ module.exports = class ControlBase {
             reject("isDropped");
           } else if (result.status.isFinalityTimeout) {
             unsub();
-            reject(
-              `Finality timeout at block hash '${result.status.asFinalityTimeout}'.`
-            );
+            reject(`Finality timeout at block hash '${result.status.asFinalityTimeout}'.`);
           } else if (result.isError) {
             unsub();
             reject(result.toHuman());
@@ -129,16 +124,16 @@ module.exports = class ControlBase {
       }
     });
   }
+
   async signAndSendWeb3(accountId32, extrinsic) {
+    /* eslint-disable-next-line no-async-promise-executor */
     return new Promise(async (resolve, reject) => {
       try {
-        const extensions = await web3Enable("my cool dapp");
+        const extensions = await web3Enable("CESS dApp");
         if (extensions.length === 0) {
-          return reject(
-            "no extension installed, or the user did not accept the authorization"
-          );
+          return reject("no extension installed, or the user did not accept the authorization");
         }
-        await this.api.isReady;
+
         const injector = await web3FromAddress(accountId32);
         extrinsic.signAndSend(
           accountId32,
@@ -158,7 +153,7 @@ module.exports = class ControlBase {
           },
           (e) => {
             console.log(e);
-          }
+          },
         );
       } catch (e) {
         console.log(e);
@@ -166,9 +161,9 @@ module.exports = class ControlBase {
       }
     });
   }
+
   async authSign(mnemonic, msg) {
     if (isBrower && mnemonic.length < 55) {
-      const extensions = await web3Enable("my cool dapp");
       const allAccounts = await web3Accounts();
 
       allAccounts.forEach((t) => {
@@ -183,7 +178,7 @@ module.exports = class ControlBase {
       const injector = await web3FromSource(account.meta.source);
       const signRaw = injector?.signer?.signRaw;
       let signatureU8a = "";
-      if (!!signRaw) {
+      if (signRaw) {
         // after making sure that signRaw is defined
         // we can use it to sign our message
         const { signature } = await signRaw({
@@ -197,7 +192,6 @@ module.exports = class ControlBase {
         signU8A: signatureU8a,
       };
     } else {
-      await this.api.isReady;
       let kr = this.keyring;
       const pair = kr.createFromUri(mnemonic);
       kr.setSS58Format(11330);
@@ -219,6 +213,7 @@ module.exports = class ControlBase {
       };
     }
   }
+
   formatAccountId(accountId32) {
     if (!accountId32 || accountId32.length == 64) {
       return accountId32;

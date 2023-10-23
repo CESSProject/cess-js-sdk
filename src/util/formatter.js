@@ -1,7 +1,7 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
+ *
  */
 const _ = require("lodash");
 
@@ -35,40 +35,23 @@ function formatterSize(size) {
   let obj = formatterSize2(size);
   return obj.size + " " + obj.ext;
 }
+
 function formatterSize2(size) {
-  let count = size;
-  if (!count) {
-    // console.log('!count',count);
-    return "0 KiB";
+  let sizeNum = _.isString(size) ? _.toNumber(size) : size;
+  const sizeUnits = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  let uIdx = 0;
+  while (sizeNum >= 1024 && uIdx < sizeUnits.length - 1) {
+    sizeNum /= 1024;
+    uIdx += 1;
   }
-  if (_.isString(count)) {
-    count = _.toNumber(count);
-  }
-  if (count === 0) return "0 KiB";
-  let k = 1024;
-  let currencyStr = [
-    "iB",
-    "KiB",
-    "MiB",
-    "GiB",
-    "TiB",
-    "PiB",
-    "EiB",
-    "ZiB",
-    "YiB",
-  ];
-  let i = 0;
-  for (let l = 0; l < 8; l++) {
-    if (count / Math.pow(k, l) < 1) {
-      break;
-    }
-    i = l;
-  }
+
   return {
-    size: (count / _.round(Math.pow(k, i))).toFixed(2),
-    ext: currencyStr[i],
+    size: sizeNum.toFixed(2),
+    ext: sizeUnits[uIdx],
   };
 }
+
 function formatBalance(balance) {
   if (!balance) {
     return "";

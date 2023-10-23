@@ -1,12 +1,12 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
+ *
  */
 const bs58 = require("bs58");
 
 const uint8ArrayToHex = (bytes) =>
-  '0x'+bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
+  "0x" + bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
 function uint8ArrayToString(u8arr) {
   var dataString = "";
   for (var i = 0; i < u8arr.length; i++) {
@@ -69,8 +69,8 @@ function byteToString(arr) {
   return str;
 }
 function hexStringToUint8Array(hexString) {
-  if(hexString.indexOf('0x')==0){
-    hexString=hexString.replace('0x','');
+  if (hexString.indexOf("0x") == 0) {
+    hexString = hexString.replace("0x", "");
   }
   const length = Math.ceil(hexString.length / 2);
   const uint8Array = new Uint8Array(length);
@@ -86,12 +86,17 @@ function hexStringToUint8Array(hexString) {
   return uint8Array;
 }
 
+function getDataIfOk(result) {
+  return result.msg === "ok" ? result.data : result;
+}
+
 module.exports = {
-  uint8ArrayToString,
+  base58ToIP,
+  byteToString,
+  getDataIfOk,
+  hexStringToUint8Array,
+  stringToByte,
   uint8ArrayToHex,
   uint8ArrayToIP,
-  base58ToIP,
-  stringToByte,
-  byteToString,
-  hexStringToUint8Array
+  uint8ArrayToString,
 };

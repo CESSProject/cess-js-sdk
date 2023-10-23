@@ -1,15 +1,14 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
+ *
  */
 let fs = null;
 let FormDataNode = null;
 const axios = require("axios");
 
-const isBrower =
-  typeof window != "undefined" && typeof window.document != "undefined";
-  
+const isBrower = typeof window != "undefined" && typeof window.document != "undefined";
+
 async function download(url, savePath, log) {
   let result = "";
   if (isBrower) {
@@ -33,9 +32,7 @@ function downloadForBrower(url, savePath, log) {
           },
           responseType: "arraybuffer",
           onDownloadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             log(`Completed：${percentCompleted}%`);
             if (percentCompleted >= 100) {
               resolve({ msg: "ok", data: savePath });
@@ -77,9 +74,7 @@ function downloadForNodejs(url, savePath, log) {
           },
           responseType: "stream",
           onDownloadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             log(`Completed：${percentCompleted}%`);
             if (percentCompleted >= 100) {
               resolve({ msg: "ok", data: savePath });
@@ -116,23 +111,23 @@ async function uploadForBrower(url, file, header, log) {
       formData.append("file", file);
       log("uploading to ", url);
 
-      const xhr = new XMLHttpRequest();  
-      xhr.open("PUT", url, true);  
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url, true);
       // 设置请求头，根据需要添加其他请求头参数
       Object.keys(header).forEach((key) => {
         xhr.setRequestHeader(key, header[key]);
       });
       xhr.onload = function () {
         if (xhr.status === 200) {
-          let data=xhr.response.split('"').join('');
-          resolve({ msg: "ok", data});
+          let data = xhr.response.split('"').join("");
+          resolve({ msg: "ok", data });
         } else {
           reject(Error(xhr.statusText));
         }
-      };  
+      };
       xhr.onerror = function () {
         reject(Error("Network Error"));
-      };  
+      };
       xhr.send(formData);
     } catch (e) {
       log(e);
@@ -161,9 +156,7 @@ async function uploadForNodejs(url, filePath, header, log) {
         .put(url, formData, {
           headers,
           onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             log(`Completed：${percentCompleted}%`);
           },
         })
@@ -181,9 +174,10 @@ async function uploadForNodejs(url, filePath, header, log) {
   });
 }
 function saveFile(blob, name) {
-  if (!(blob instanceof Blob)) {
-    blob = arrayBufferToBlob(blob);
-  }
+  // note: commented the following because `arrayBufferToBlob()` is not a valid function.
+  // if (!(blob instanceof Blob)) {
+  //   blob = arrayBufferToBlob(blob);
+  // }
   let a = document.createElement("a");
   a.href = window.URL.createObjectURL(blob);
   a.download = name;

@@ -1,34 +1,28 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 const ControlBase = require("../control-base");
-const config = require("../config");
 const fileHelper = require("../util/file-helper");
 const bs58 = require("bs58");
 const { formatterSize } = require("../util/formatter");
-const {
-  stringToHex,
-  hexToString,
-  hexToU8a,
-  u8aToHex,
-} = require("@polkadot/util");
+const { hexToString } = require("@polkadot/util");
 
 module.exports = class File extends ControlBase {
-  constructor(api, keyring, isDebug) {
+  constructor(api, keyring, gatewayURL, isDebug = false) {
     super(api, keyring, isDebug);
+    this.gatewayURL = gatewayURL;
   }
+
   async queryFileListFull(accountId32) {
     try {
       let ret = await this.queryFileList(accountId32);
-      if (ret.msg != "ok") {
+      if (ret.msg !== "ok") {
         return ret;
       }
       for (let file of ret.data) {
         let tmp = await this.queryFileMetadata(file.fileHash);
-        if (tmp.msg == "ok") {
-          // console.log(tmp.data.owner);
+        if (tmp.msg === "ok") {
           let owe = tmp.data.owner.find((t) => t.user == accountId32);
           if (owe) {
             file.fileName = owe.fileName;
@@ -48,13 +42,12 @@ module.exports = class File extends ControlBase {
       };
     }
   }
+
   async queryFileList(accountId32) {
     try {
-      await this.api.isReady;
       let ret = await this.api.query.fileBank.userHoldFileList(accountId32);
       let data2 = ret.toHuman();
       let data = ret.toJSON();
-      let list = [];
       data.forEach((t, i) => {
         t.fileHash = data2[i].fileHash;
         t.fileSizeStr = formatterSize(t.fileSize);
@@ -72,9 +65,9 @@ module.exports = class File extends ControlBase {
       };
     }
   }
+
   async queryFileMetadata(fileHash) {
     try {
-      await this.api.isReady;
       let ret = await this.api.query.fileBank.file(fileHash);
       let hu = ret.toHuman();
       let data = ret.toJSON();
@@ -84,7 +77,9 @@ module.exports = class File extends ControlBase {
           if (n.indexOf("0x") == 0) {
             try {
               n = hexToString(n);
-            } catch (ee) {}
+            } catch (e) {
+              console.error(e);
+            }
           }
           data.owner[i].fileName = n;
           data.owner[i].bucketName = hu.owner[i].bucketName;
@@ -103,46 +98,43 @@ module.exports = class File extends ControlBase {
       };
     }
   }
+
   async uploadFile(mnemonic, accountId32, filePath, bucketName) {
     try {
-      let message = "cess-js-sdk-" + new Date().valueOf();
+      const message = "cess-js-sdk-" + new Date().valueOf();
       const { signU8A } = await this.authSign(mnemonic, message);
-      console.log({ signU8A });
-      let sign = bs58.encode(signU8A);
+      const sign = bs58.encode(signU8A);
+
       if (!sign) {
         console.log("sign error");
         return {
           msg: "sign error",
         };
       }
-      let headers = {};
-      headers["BucketName"] = bucketName;
-      headers["Account"] = accountId32;
-      headers["Message"] = message;
-      headers["Signature"] = sign;
-      let ret = await fileHelper.upload(
-        config.gateway.url,
-        filePath,
-        headers,
-        this.log
-      );
+
+      const headers = {
+        BucketName: bucketName,
+        Account: accountId32,
+        Message: message,
+        Signature: sign,
+      };
+
+      const ret = await fileHelper.upload(this.gatewayURL, filePath, headers, this.log);
       return ret;
     } catch (e) {
       console.log(e);
       return { msg: "error", error: e.message };
     }
   }
+
   async downloadFile(fileHash, savePath) {
-    let url = config.gateway.url + fileHash;
+    let url = this.gatewayURL + fileHash;
     let ret = await fileHelper.download(url, savePath, this.log);
     return ret;
   }
+
   async deleteFile(mnemonic, accountId32, fileHashArray) {
-    await this.api.isReady;
-    const extrinsic = this.api.tx.fileBank.deleteFile(
-      accountId32,
-      fileHashArray
-    );
+    const extrinsic = this.api.tx.fileBank.deleteFile(accountId32, fileHashArray);
     return await this.signAndSend(mnemonic, extrinsic);
   }
 };

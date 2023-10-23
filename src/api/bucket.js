@@ -1,15 +1,15 @@
 /*
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
- * 
  */
 const ControlBase = require("../control-base");
 const { formatEntries } = require("../util/formatter");
 
 module.exports = class Bucket extends ControlBase {
-  constructor(api, keyring, isDebug) {
+  constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
+
   async queryBucketNames(accountId32) {
     try {
       await this.api.isReady;
@@ -28,13 +28,14 @@ module.exports = class Bucket extends ControlBase {
       };
     }
   }
+
   async queryBucketList(accountId32) {
     try {
       await this.api.isReady;
       let ret = await this.api.query.fileBank.bucket.entries(accountId32);
-      let data = formatEntries(ret,false,false);
-      data.forEach(t=>{
-        t.key=t.ids[1];
+      let data = formatEntries(ret, false, false);
+      data.forEach((t) => {
+        t.key = t.ids[1];
         delete t.ids;
         delete t.authority;
       });
@@ -51,6 +52,7 @@ module.exports = class Bucket extends ControlBase {
       };
     }
   }
+
   async queryBucketInfo(accountId32, name) {
     try {
       await this.api.isReady;
@@ -69,11 +71,13 @@ module.exports = class Bucket extends ControlBase {
       };
     }
   }
+
   async createBucket(mnemonic, accountId32, name) {
     await this.api.isReady;
     const extrinsic = this.api.tx.fileBank.createBucket(accountId32, name);
     return await this.signAndSend(mnemonic, extrinsic);
   }
+
   async deleteBucket(mnemonic, accountId32, name) {
     await this.api.isReady;
     const extrinsic = this.api.tx.fileBank.deleteBucket(accountId32, name);
