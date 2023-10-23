@@ -31,6 +31,10 @@ async function main() {
   console.log("query authorityList:");
   result = await oss.authorityList(addr);
   console.log(getDataIfOk(result));
+
+  // console.log("authorize:");
+  await oss.authorize(mnemonic, gatewayAddr);
+  // console.log(getDataIfOk(result), "\n");
 }
 
 main()

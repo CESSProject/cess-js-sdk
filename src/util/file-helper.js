@@ -164,8 +164,8 @@ async function uploadForNodejs(url, filePath, header, log) {
           resolve({ msg: "ok", data: res.data });
         })
         .catch((error) => {
-          console.error("Download fail：", error);
-          reject(error);
+          console.error("Upload fail：", error.message);
+          reject(error.message);
         });
     } catch (e) {
       log(e);

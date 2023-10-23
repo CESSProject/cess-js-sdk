@@ -15,38 +15,32 @@ async function queryFileList(oss, accountId32) {
   console.log("queryFileList:");
   let result = await oss.queryFileListFull(accountId32);
   console.log(getDataIfOk(result), "\n");
+  return result;
 }
 
-async function uploadFile(oss, accountId32, mnemonic) {
-  console.log("uploadFile:");
-  const result = await oss.uploadFile(mnemonic, accountId32, LICENSE_PATH, BUCKET_NAME);
+async function queryFileMetadata(oss, fileHash) {
+  console.log("queryFileMetadata:");
+  const result = await oss.queryFileMetadata(fileHash);
   console.log(getDataIfOk(result), "\n");
 }
 
-async function downloadFile(oss) {
+async function uploadFile(oss, accountId32, mnemonic, bucketName) {
+  console.log("uploadFile:");
+  const result = await oss.uploadFile(mnemonic, accountId32, LICENSE_PATH, bucketName);
+  console.log(getDataIfOk(result), "\n");
+  return result;
+}
+
+async function downloadFile(oss, fileHash) {
   console.log("downloadFile:");
-  oss;
-  // const fileHash = "2079b3ca8d5261c012cca20e955f0d0a8afe1cca9bb3c023a9527504477802dc";
-  // const result = await oss.downloadFile(fileHash, "./file/down/a.txt");
-  // console.log(result.msg === "ok" ? result.data : result);
+  const result = await oss.downloadFile(fileHash, "./tmp.txt");
+  console.log(result.msg === "ok" ? result.data : result);
 }
 
-async function queryFileMetadata(oss) {
-  console.log("queryFileMetadata:");
-  oss;
-  // const fileHash = "d8dbf99e9ed4fed5db4f5cb945410177d47bcdab9d99e04f33c116655f8c7656";
-  // const result = await oss.queryFileMetadata(fileHash);
-  // console.log(result.msg === "ok" ? result.data : result);
-}
-
-async function deleteFile(oss, accountId32, mnemonic) {
+async function deleteFile(oss, accountId32, mnemonic, fileHash) {
   console.log("deleteFile:");
-  oss;
-  accountId32;
-  mnemonic;
-  // const fileHash = "d8dbf99e9ed4fed5db4f5cb945410177d47bcdab9d99e04f33c116655f8c7656";
-  // const result = await oss.deleteFile(mnemonic, accountId32, [fileHash]);
-  // console.log(result.msg === "ok" ? result.data : result);
+  const result = await oss.deleteFile(mnemonic, accountId32, [fileHash]);
+  console.log(result.msg === "ok" ? result.data : result);
 }
 
 async function main() {
@@ -54,11 +48,19 @@ async function main() {
   const { mnemonic, addr } = wellKnownAcct;
   const oss = new File(api, keyring, testnetConfig.gatewayURL, true);
 
-  await queryFileList(oss, addr);
-  await uploadFile(oss, addr, mnemonic);
-  await downloadFile(oss);
-  await queryFileMetadata(oss);
-  await deleteFile(oss, addr, mnemonic);
+  let result = await queryFileList(oss, addr);
+  if (result.msg != "ok") {
+    return;
+  }
+  let bucketName = BUCKET_NAME;
+  if (result.data?.length) {
+    let tmpFileHash = result.data[0].fileHash;
+    await queryFileMetadata(oss, tmpFileHash);
+    bucketName = result.data[0].bucketName;
+    await downloadFile(oss, tmpFileHash);
+    await deleteFile(oss, addr, mnemonic, tmpFileHash);
+  }
+  await uploadFile(oss, addr, mnemonic, bucketName);
 }
 
 main()

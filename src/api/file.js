@@ -123,7 +123,7 @@ module.exports = class File extends ControlBase {
       return ret;
     } catch (e) {
       console.log(e);
-      return { msg: "error", error: e.message };
+      return { msg: "error", error: e };
     }
   }
 
