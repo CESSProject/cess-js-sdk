@@ -8,6 +8,7 @@ module.exports = class Space extends ControlBase {
   constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
+
   async userOwnedSpace(accountId32) {
     try {
       let ret = await this.api.query.storageHandler.userOwnedSpace(accountId32);
@@ -29,14 +30,17 @@ module.exports = class Space extends ControlBase {
       };
     }
   }
+
   async buySpace(mnemonic, gibCount) {
     const extrinsic = this.api.tx.storageHandler.buySpace(gibCount);
     return await this.signAndSend(mnemonic, extrinsic);
   }
+
   async expansionSpace(mnemonicOrAccountId32, gibCount) {
     const extrinsic = this.api.tx.storageHandler.expansionSpace(gibCount);
     return await this.signAndSend(mnemonicOrAccountId32, extrinsic);
   }
+
   async renewalSpace(mnemonic, days) {
     const extrinsic = this.api.tx.storageHandler.renewalSpace(days);
     return await this.signAndSend(mnemonic, extrinsic);

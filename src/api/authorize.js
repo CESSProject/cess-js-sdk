@@ -3,12 +3,12 @@
  * @Autor: cess lab
  */
 const ControlBase = require("../control-base");
-const defaultConfig = require("../config");
 
 module.exports = class Authorize extends ControlBase {
   constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
+
   async authorityList(accountId32) {
     try {
       let ret = await this.api.query.oss.authorityList(accountId32);
@@ -26,15 +26,14 @@ module.exports = class Authorize extends ControlBase {
       };
     }
   }
+
   async authorize(mnemonic, operator) {
-    if (!operator) {
-      operator = defaultConfig.gateway.account;
-    }
     const extrinsic = this.api.tx.oss.authorize(operator);
     return await this.signAndSend(mnemonic, extrinsic);
   }
-  async cancelAuthorize(mnemonic) {
-    const extrinsic = this.api.tx.oss.cancelAuthorize();
+
+  async cancelAuthorize(mnemonic, operator) {
+    const extrinsic = this.api.tx.oss.cancelAuthorize(operator);
     return await this.signAndSend(mnemonic, extrinsic);
   }
 };

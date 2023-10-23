@@ -9,6 +9,7 @@ module.exports = class Bucket extends ControlBase {
   constructor(api, keyring, isDebug = false) {
     super(api, keyring, isDebug);
   }
+
   async queryBucketNames(accountId32) {
     try {
       await this.api.isReady;
@@ -27,6 +28,7 @@ module.exports = class Bucket extends ControlBase {
       };
     }
   }
+
   async queryBucketList(accountId32) {
     try {
       await this.api.isReady;
@@ -50,6 +52,7 @@ module.exports = class Bucket extends ControlBase {
       };
     }
   }
+
   async queryBucketInfo(accountId32, name) {
     try {
       await this.api.isReady;
@@ -68,11 +71,13 @@ module.exports = class Bucket extends ControlBase {
       };
     }
   }
+
   async createBucket(mnemonic, accountId32, name) {
     await this.api.isReady;
     const extrinsic = this.api.tx.fileBank.createBucket(accountId32, name);
     return await this.signAndSend(mnemonic, extrinsic);
   }
+
   async deleteBucket(mnemonic, accountId32, name) {
     await this.api.isReady;
     const extrinsic = this.api.tx.fileBank.deleteBucket(accountId32, name);

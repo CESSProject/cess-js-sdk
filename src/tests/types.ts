@@ -1,18 +1,17 @@
-import { Space, InitAPI, Common } from "../../";
+import { Space, InitAPI, Common, testnetConfig, wellKnownAcct } from "../../";
 
 // If you need testnet tokens, goto CESS testnet faucet at:
 // https://cess.cloud/faucet.html
 
 // Substrate well-known mnemonic. Don't use them in production:
 //  https://github.com/substrate-developer-hub/substrate-developer-hub.github.io/issues/613
-const mnemonic = "bottom drive obey lake curtain smoke basket hold race lonely fit walk";
-const acctId = "cXgaee2N8E77JJv9gdsGAckv1Qsf3hqWYf7NL4q6ZuQzuAUtB";
+const { mnemonic, addr: acctId } = wellKnownAcct;
 
 const RENT_SPACE = 1; // unit in GB.
 const RENEWAL_LEN = 1; // unit in day.
 
 async function main() {
-  const { api, keyring } = await InitAPI();
+  const { api, keyring } = await InitAPI(testnetConfig);
   console.log("API initialized");
 
   const [chain, nodeName, nodeVersion] = await Promise.all([
@@ -35,14 +34,13 @@ async function main() {
   const blockHeight = await common.queryBlockHeight();
   console.log("current block height:", blockHeight);
 
-  const { data: initSpaceData } = initSpace;
-  common.formatSpaceInfo(initSpaceData, blockHeight);
-  console.log("initial user space:", initSpaceData);
+  let spaceData = common.formatSpaceInfo(initSpace.data, blockHeight);
+  console.log("initial user space:", spaceData);
 
   if (process.env.CI === "true") return;
 
   // The following code writes to CESS blockchain. Run only when not in CI (github action) mode.
-  if (initSpaceData.totalSpace) {
+  if (spaceData.totalSpace) {
     console.log("expansionSpace:", await space.expansionSpace(mnemonic, RENT_SPACE));
     console.log("renewalSpace:", await space.renewalSpace(mnemonic, RENEWAL_LEN));
   } else {
@@ -50,10 +48,8 @@ async function main() {
   }
 
   const afterSpace = await space.userOwnedSpace(acctId);
-
-  const { data: afterSpaceData } = afterSpace;
-  common.formatSpaceInfo(afterSpaceData, blockHeight);
-  console.log("user space afterwards:", afterSpaceData);
+  spaceData = common.formatSpaceInfo(afterSpace.data, blockHeight);
+  console.log("user space afterwards:", spaceData);
 }
 
 main()

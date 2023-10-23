@@ -14,42 +14,44 @@ interface APIReturnedData {
   error?: string;
 }
 
+interface KeyringOption {
+  type: string;
+  ss58Format: number;
+}
+
 declare namespace CESS {
   interface CESSConfig {
     nodeURL: string;
-    keyringOption: {
-      type: string;
-      ss58Format: number;
-    };
-    gateway: {
-      url: string;
-      account: string;
-    };
+    gatewayURL: string;
+    keyringOption: KeyringOption;
   }
 
   interface SpaceInfo {
     totalSpace?: number;
+    usedSpace?: number;
+    lockedSpace?: number;
+    remainingSpace?: number;
+    deadline?: number;
+  }
+
+  interface SpaceInfoFormatted extends SpaceInfo {
     totalSpaceGib?: number;
     totalSpaceStr?: string;
 
-    usedSpace?: number;
     usedSpaceGib?: number;
     usedSpaceStr?: string;
 
-    lockedSpace?: number;
     lockedSpaceGib?: number;
     lockedSpaceStr?: string;
 
-    remainingSpace?: number;
     remainingSpaceGib?: number;
     remainingSpaceStr?: string;
 
-    deadline?: number;
     deadlineTime?: string;
     remainingDays?: number;
   }
 
-  function InitAPI(config?: CESSConfig): Promise<{
+  function InitAPI(config: CESSConfig): Promise<{
     api: ApiPromise;
     keyring: Keyring;
   }>;
@@ -69,7 +71,7 @@ declare namespace CESS {
   class Common extends ControlBase {
     constructor(api: ApiPromise, keyring: Keyring, isDebug?: boolean);
     queryBlockHeight(): Promise<number>;
-    formatSpaceInfo(spaceInfo: SpaceInfo | undefined, blockHeight: number): void;
+    formatSpaceInfo(spaceInfo: SpaceInfo | undefined, blockHeight: number): SpaceInfoFormatted;
   }
 
   class Space extends ControlBase {
@@ -83,8 +85,8 @@ declare namespace CESS {
   class Authorize extends ControlBase {
     constructor(api: ApiPromise, keyring: Keyring, isDebug?: boolean);
     authorityList(accountId32: string): Promise<APIReturnedData>;
-    authorize(mnemonic: string, operator: object | undefined): Promise<any>;
-    cancelAuthorize(mnemonic: string): Promise<any>;
+    authorize(mnemonic: string, operator: string): Promise<any>;
+    cancelAuthorize(mnemonic: string, operator: string): Promise<any>;
   }
 
   class Bucket extends ControlBase {
@@ -97,7 +99,7 @@ declare namespace CESS {
   }
 
   class File extends ControlBase {
-    constructor(api: ApiPromise, keyring: Keyring, isDebug?: boolean);
+    constructor(api: ApiPromise, keyring: Keyring, gatewayURL: string, isDebug?: boolean);
     queryFileListFull(accountId32: string): Promise<APIReturnedData>;
     queryFileList(accountId32: string): Promise<APIReturnedData>;
     queryFileMetadata(fileHash: string): Promise<APIReturnedData>;
@@ -110,4 +112,18 @@ declare namespace CESS {
     downloadFile(fileHash: string, savePath: string): Promise<any>;
     deleteFile(mnemonic: string, accountId32: string, fileHashArray: string[]): Promise<any>;
   }
+
+  function buildConfig(
+    nodeURL: string,
+    gatewayURL: string,
+    keyringOption?: KeyringOption,
+  ): CESSConfig;
+
+  const testnetConfig: CESSConfig;
+
+  const wellKnownAcct: {
+    addr: string;
+    mnemonic: string;
+    gatewayAddr: string;
+  };
 }

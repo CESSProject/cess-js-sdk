@@ -86,12 +86,17 @@ function hexStringToUint8Array(hexString) {
   return uint8Array;
 }
 
+function getDataIfOk(result) {
+  return result.msg === "ok" ? result.data : result;
+}
+
 module.exports = {
-  uint8ArrayToString,
+  base58ToIP,
+  byteToString,
+  getDataIfOk,
+  hexStringToUint8Array,
+  stringToByte,
   uint8ArrayToHex,
   uint8ArrayToIP,
-  base58ToIP,
-  stringToByte,
-  byteToString,
-  hexStringToUint8Array,
+  uint8ArrayToString,
 };

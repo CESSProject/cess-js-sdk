@@ -1,36 +1,24 @@
 {
   "name": "cess-js-sdk",
   "author": "CESS <hello@cess.cloud>",
+  "homepage": "https://www.cess.cloud",
   "license": "MIT",
   "version": "0.8.0",
   "description": "A js-sdk for Cess Project with file storage",
-  "main": "index.js",
-  "module": "index.mjs",
-  "types": "types.d.ts",
-  "scripts": {
-    "fmt": "prettier --write .",
-    "lint": "eslint .",
-    "test:types": "ts-node src/tests/types.ts",
-    "validate": "pnpm prettier -c . && pnpm lint && pnpm test:types"
-  },
+  "main": "src/index.js",
+  "module": "src/index.mjs",
+  "types": "src/types.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/CESSProject/cess-js-sdk.git"
   },
-  "homepage": "https://www.cess.cloud",
-  "keywords": [
-    "blockchain",
-    "cess",
-    "chain",
-    "file-storage",
-    "filecoin",
-    "ipfs",
-    "polkadot",
-    "polkadot-api",
-    "polkadot-js",
-    "protobufjs",
-    "substrate"
-  ],
+  "scripts": {
+    "fmt": "prettier --write .",
+    "lint": "eslint .",
+    "test:types": "ts-node src/tests/types.ts",
+    "examples": "ts-node src/examples/index.ts",
+    "validate": "pnpm prettier -c . && pnpm lint && pnpm test:types"
+  },
   "dependencies": {
     "@polkadot/api": "^10.9.1",
     "@polkadot/extension-dapp": "^0.46.5",
@@ -58,6 +46,19 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
+  "keywords": [
+    "blockchain",
+    "cess",
+    "chain",
+    "file-storage",
+    "filecoin",
+    "ipfs",
+    "polkadot",
+    "polkadot-api",
+    "polkadot-js",
+    "protobufjs",
+    "substrate"
+  ],
   "lint-staged": {
     "**/*.{js,cjs,mjs,ts,tsx}": [
       "eslint --fix"

@@ -23,7 +23,7 @@ pnpm add cess-js-sdk
 
 ```ts
 async function main() {
-  const { api, keyring } = await InitAPI();
+  const { api, keyring } = await InitAPI(testnetConfig);
   console.log("API initialized");
 
   const [chain, nodeName, nodeVersion] = await Promise.all([
@@ -46,9 +46,8 @@ async function main() {
   const blockHeight = await common.queryBlockHeight();
   console.log("current block height:", blockHeight);
 
-  const { data: initSpaceData } = initSpace;
-  common.formatSpaceInfo(initSpaceData, blockHeight);
-  console.log("initial user space:", initSpaceData);
+  let spaceData = common.formatSpaceInfo(initSpace.data, blockHeight);
+  console.log("initial user space:", spaceData);
 
   if (initSpaceData.totalSpace) {
     console.log("expansionSpace:", await space.expansionSpace(mnemonic, RENT_SPACE));
@@ -59,9 +58,9 @@ async function main() {
 
   const afterSpace = await space.userOwnedSpace(acctId);
 
-  const { data: afterSpaceData } = afterSpace;
-  common.formatSpaceInfo(afterSpaceData, blockHeight);
-  console.log("user space afterwards:", afterSpaceData);
+  const afterSpace = await space.userOwnedSpace(acctId);
+  spaceData = common.formatSpaceInfo(afterSpace.data, blockHeight);
+  console.log("user space afterwards:", spaceData);
 }
 
 main()
@@ -69,11 +68,25 @@ main()
   .finally(() => process.exit());
 ```
 
-[More examples are here](./examples).
+More examples are in the [**examples**](./examples) directory.
+
+To run them one by one, try:
+
+```bash
+pnpm examples
+```
+
+All examples connect to the Testnet and use the account `cXgaee2N8E77JJv9gdsGAckv1Qsf3hqWYf7NL4q6ZuQzuAUtB` as default with the following mnemonic:
+
+```
+bottom drive obey lake curtain smoke basket hold race lonely fit walk
+```
+
+This is the [well-known development account](https://github.com/substrate-developer-hub/substrate-developer-hub.github.io/issues/613) in Substrate. If you don't have the token needed, please fetch it from the [Testnet faucet](https://cess.cloud/faucet.html).
 
 ### CESS Testnet RPC Endpoints
 
-```sh
+```
 wss://testnet-rpc0.cess.cloud/ws/
 wss://testnet-rpc1.cess.cloud/ws/
 wss://testnet-rpc2.cess.cloud/ws/
@@ -81,43 +94,69 @@ wss://testnet-rpc2.cess.cloud/ws/
 
 ### CESS Testnet Faucet
 
-```sh
+```
 https://testnet-faucet.cess.cloud/
 ```
 
 ### CESS Testnet Public Gateway
 
-```sh
-Address ： https://deoss-pub-gateway.cess.cloud/
-Account ： cXhwBytXqrZLr1qM5NHJhCzEMckSTzNKw17ci2aHft6ETSQm9
+```
+Address: https://deoss-pub-gateway.cess.cloud/
+Account: cXhwBytXqrZLr1qM5NHJhCzEMckSTzNKw17ci2aHft6ETSQm9
 ```
 
 ## APIs
 
+### CESS Config
+
+The config object of `CESSConfig` type is:
+
+```ts
+const testnetConfig = {
+  nodeURL: "wss://testnet-rpc0.cess.cloud/ws/",
+  keyringOption: { type: "sr25519", ss58Format: 42 },
+  gatewayURL: "http://deoss-pub-gateway.cess.cloud/",
+};
+
+function buildConfig(nodeURL, gatewayURL, keyringOption) {
+  return {
+    nodeURL,
+    gatewayURL,
+    // default value for keyring option
+    keyringOption: keyringOption || {
+      type: "sr25519",
+      ss58Format: 42,
+    },
+  };
+}
+```
+
 ### Space
 
-- `userOwnedSpace(AccountId32)`
-- `buySpace(gibCount)`
-- `expansionSpace(gibCount)`
-- `renewalSpace(days)`
+- `userOwnedSpace(accountId32: string): Promise<APIReturnedData>`
+- `buySpace(mnemonic: string, gibCount: number): Promise<any>`
+- `expansionSpace(mnemonicOrAccountId32: string, gibCount: number): Promise<any>`
+- `renewalSpace(mnemonic: string, days: number): Promise<any>`
 
 ### Authorize
 
-- `authorityList(accountId32)`
-- `authorize(mnemonic,config.gateway.account)`
-- `cancelAuthorize(mnemonic)`
+- `authorityList(accountId32: string): Promise<APIReturnedData>`
+- `authorize(mnemonic: string, operator: string): Promise<any>`
+- `cancelAuthorize(mnemonic: string, operator: string): Promise<any>`
 
 ### Bucket
 
-- `queryBucketList(accountId32)`
-- `createBucket(mnemonic, accountId32, buckname)`
-- `queryBucketInfo(accountId32)`
-- `deleteBucket(mnemonic,accountId32, buckname)`
+- `queryBucketNames(accountId32: string): Promise<APIReturnedData>`
+- `queryBucketList(accountId32: string): Promise<APIReturnedData>`
+- `queryBucketInfo(accountId32: string, name: string): Promise<APIReturnedData>`
+- `createBucket(mnemonic: string, accountId32: string, name: string): Promise<any>`
+- `deleteBucket(mnemonic: string, accountId32: string, name: string): Promise<any>`
 
 ### File
 
-- `queryFileListFull(accountId32)`
-- `queryFileMetadata(fileHash)`
-- `uploadFile(mnemonic, accountId32, filePath, bucketName)`
-- `downloadFile(fileHash, savePath)`
-- `deleteFile(mnemonic, accountId32, [fileHash])`
+- `queryFileListFull(accountId32: string): Promise<APIReturnedData>`
+- `queryFileList(accountId32: string): Promise<APIReturnedData>`
+- `queryFileMetadata(fileHash: string): Promise<APIReturnedData>`
+- `uploadFile(mnemonic: string, accountId32: string, filePath: string, bucketName: string): Promise<any>`
+- `downloadFile(fileHash: string, savePath: string): Promise<any>`
+- `deleteFile(mnemonic: string, accountId32: string, fileHashArray: string[]): Promise<any>`
