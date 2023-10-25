@@ -70,7 +70,7 @@ main()
 
 More examples are in the [**examples**](./examples) directory.
 
-To run them one by one, try:
+To run them all, run the command:
 
 ```bash
 pnpm examples
