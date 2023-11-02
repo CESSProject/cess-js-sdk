@@ -31,18 +31,18 @@ module.exports = class Space extends ControlBase {
     }
   }
 
-  async buySpace(mnemonic, gibCount) {
+  async buySpace(mnemonicOrAccountId32, gibCount, subState = null) {
     const extrinsic = this.api.tx.storageHandler.buySpace(gibCount);
-    return await this.signAndSend(mnemonic, extrinsic);
+    return await this.signAndSend(mnemonicOrAccountId32, extrinsic, subState);
   }
 
-  async expansionSpace(mnemonicOrAccountId32, gibCount) {
+  async expansionSpace(mnemonicOrAccountId32, gibCount, subState = null) {
     const extrinsic = this.api.tx.storageHandler.expansionSpace(gibCount);
-    return await this.signAndSend(mnemonicOrAccountId32, extrinsic);
+    return await this.signAndSend(mnemonicOrAccountId32, extrinsic, subState);
   }
 
-  async renewalSpace(mnemonic, days) {
+  async renewalSpace(mnemonicOrAccountId32, days, subState = null) {
     const extrinsic = this.api.tx.storageHandler.renewalSpace(days);
-    return await this.signAndSend(mnemonic, extrinsic);
+    return await this.signAndSend(mnemonicOrAccountId32, extrinsic, subState);
   }
 };

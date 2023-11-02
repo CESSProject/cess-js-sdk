@@ -23,6 +23,20 @@ module.exports = class Common extends ControlBase {
 
   formatSpaceInfo(obj, blockHeight) {
     const result = { ...obj };
+    result.totalSpaceGib = 0;
+    result.totalSpaceStr = "0 GB";
+
+    result.usedSpaceGib = 0;
+    result.usedSpaceStr = "0 GB";
+
+    result.lockedSpaceGib = 0;
+    result.lockedSpaceStr = "0 GB";
+
+    result.remainingSpaceGib = 0;
+    result.remainingSpaceStr = "0 GB";
+
+    result.deadlineTime = "--";
+    result.remainingDays = 0;
 
     if (result.totalSpace) {
       result.totalSpaceGib = result.totalSpace / GB;

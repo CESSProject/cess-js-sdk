@@ -133,8 +133,8 @@ module.exports = class File extends ControlBase {
     return ret;
   }
 
-  async deleteFile(mnemonic, accountId32, fileHashArray) {
+  async deleteFile(mnemonic, accountId32, fileHashArray, subState = null) {
     const extrinsic = this.api.tx.fileBank.deleteFile(accountId32, fileHashArray);
-    return await this.signAndSend(mnemonic, extrinsic);
+    return await this.signAndSend(mnemonic, extrinsic, subState);
   }
 };

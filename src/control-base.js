@@ -80,18 +80,21 @@ module.exports = class ControlBase {
     });
   }
 
-  signAndSend(mnemonic, extrinsic) {
+  signAndSend(mnemonic, extrinsic, subState = null) {
     /* eslint-disable-next-line no-async-promise-executor */
     return new Promise(async (resolve, reject) => {
       try {
         if (mnemonic.length < 55) {
-          let result = await this.signAndSendWeb3(mnemonic, extrinsic);
+          let result = await this.signAndSendWeb3(mnemonic, extrinsic, subState);
           return resolve(result);
         }
         const pair = this.keyring.createFromUri(mnemonic);
         const extrinsicHash = extrinsic.hash.toHex();
         const unsub = await extrinsic.signAndSend(pair, (result) => {
           // this.log(result.toHuman());
+          if (subState && typeof subState == "function") {
+            subState(result.toHuman());
+          }
           if (result.status.isInBlock || result.status.isFinalized) {
             unsub();
             if (!result.dispatchInfo) {
@@ -125,7 +128,7 @@ module.exports = class ControlBase {
     });
   }
 
-  async signAndSendWeb3(accountId32, extrinsic) {
+  async signAndSendWeb3(accountId32, extrinsic, subState = null) {
     /* eslint-disable-next-line no-async-promise-executor */
     return new Promise(async (resolve, reject) => {
       try {
@@ -140,6 +143,9 @@ module.exports = class ControlBase {
           { signer: injector.signer },
           (status) => {
             try {
+              if (subState && typeof subState == "function") {
+                subState(status);
+              }
               console.log("status.status.toJSON()", status.status.toJSON());
               console.log("isFinalized", status.isFinalized);
               if (status.isFinalized) {

@@ -62,8 +62,16 @@ declare namespace CESS {
     error(...msgs: string[]): void;
     sign(mnemonic: string, tx: object): Promise<string>;
     submitTransaction(transaction: object): Promise<string>;
-    signAndSend(mnemonic: string, extrinsic: object): Promise<any>;
-    signAndSendWeb3(accountId32: string, extrinsic: object): Promise<any>;
+    signAndSend(
+      mnemonic: string,
+      extrinsic: object,
+      subState?: (status: any) => void,
+    ): Promise<any>;
+    signAndSendWeb3(
+      accountId32: string,
+      extrinsic: object,
+      subState?: (status: any) => void,
+    ): Promise<any>;
     authSign(mnemonic: string, msg: string): Promise<any>;
     formatAccountId(accountId32: string | undefined): string | undefined;
   }
@@ -77,16 +85,24 @@ declare namespace CESS {
   class Space extends ControlBase {
     constructor(api: ApiPromise, keyring: Keyring, isDebug?: boolean);
     userOwnedSpace(accountId32: string): Promise<APIReturnedData>;
-    buySpace(mnemonic: string, gibCount: number): Promise<any>;
-    expansionSpace(mnemonicOrAccountId32: string, gibCount: number): Promise<any>;
-    renewalSpace(mnemonic: string, days: number): Promise<any>;
+    buySpace(mnemonic: string, gibCount: number, subState?: (status: any) => void): Promise<any>;
+    expansionSpace(
+      mnemonicOrAccountId32: string,
+      gibCount: number,
+      subState?: (status: any) => void,
+    ): Promise<any>;
+    renewalSpace(mnemonic: string, days: number, subState?: (status: any) => void): Promise<any>;
   }
 
   class Authorize extends ControlBase {
     constructor(api: ApiPromise, keyring: Keyring, isDebug?: boolean);
     authorityList(accountId32: string): Promise<APIReturnedData>;
-    authorize(mnemonic: string, operator: string): Promise<any>;
-    cancelAuthorize(mnemonic: string, operator: string): Promise<any>;
+    authorize(mnemonic: string, operator: string, subState?: (status: any) => void): Promise<any>;
+    cancelAuthorize(
+      mnemonic: string,
+      operator: string,
+      subState?: (status: any) => void,
+    ): Promise<any>;
   }
 
   class Bucket extends ControlBase {
@@ -94,8 +110,18 @@ declare namespace CESS {
     queryBucketNames(accountId32: string): Promise<APIReturnedData>;
     queryBucketList(accountId32: string): Promise<APIReturnedData>;
     queryBucketInfo(accountId32: string, name: string): Promise<APIReturnedData>;
-    createBucket(mnemonic: string, accountId32: string, name: string): Promise<any>;
-    deleteBucket(mnemonic: string, accountId32: string, name: string): Promise<any>;
+    createBucket(
+      mnemonic: string,
+      accountId32: string,
+      name: string,
+      subState?: (status: any) => void,
+    ): Promise<any>;
+    deleteBucket(
+      mnemonic: string,
+      accountId32: string,
+      name: string,
+      subState?: (status: any) => void,
+    ): Promise<any>;
   }
 
   class File extends ControlBase {
@@ -110,7 +136,12 @@ declare namespace CESS {
       bucketName: string,
     ): Promise<any>;
     downloadFile(fileHash: string, savePath: string): Promise<any>;
-    deleteFile(mnemonic: string, accountId32: string, fileHashArray: string[]): Promise<any>;
+    deleteFile(
+      mnemonic: string,
+      accountId32: string,
+      fileHashArray: string[],
+      subState?: (status: any) => void,
+    ): Promise<any>;
   }
 
   function buildConfig(
