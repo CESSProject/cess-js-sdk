@@ -2,6 +2,7 @@
  * @Description: js-sdk for cess storage
  * @Autor: cess lab
  */
+let extension = null;
 let web3Enable = () => [];
 let web3FromAddress = () => {
   return {};
@@ -11,14 +12,15 @@ let web3FromSource = () => {};
 const isBrower = typeof window != "undefined" && typeof window.document != "undefined";
 
 if (isBrower) {
-  const extension = require("@polkadot/extension-dapp");
+  console.log("init polkadot/extension-dapp");
+  extension = require("@polkadot/extension-dapp");
   web3Enable = extension.web3Enable;
   web3FromAddress = extension.web3FromAddress;
   web3Accounts = extension.web3Accounts;
   web3FromSource = extension.web3FromSource;
 }
 const util = require("../src/util/index");
-const { stringToHex, hexToU8a } = require("@polkadot/util");
+const { stringToHex, hexToU8a, u8aConcat, u8aToHex } = require("@polkadot/util");
 
 module.exports = class ControlBase {
   constructor(api, keyring, isDebug = false) {
@@ -168,36 +170,47 @@ module.exports = class ControlBase {
     });
   }
 
-  async authSign(mnemonic, msg) {
-    if (isBrower && mnemonic.length < 55) {
+  async authSign(mnemonic, msg) {    
+    if (isBrower) {
+      // console.log("Is in brower.");
+      await web3Enable("cess");
       const allAccounts = await web3Accounts();
 
       allAccounts.forEach((t) => {
         // t.setSS58Format(11330);
         t.address = this.formatAccountId(t.address);
       });
-      const account = allAccounts.find((t) => t.address == mnemonic);
+      let account = allAccounts.find((t) => t.address == mnemonic);
       if (!account) {
-        console.log("account not found!");
-        return { msg: "account not found!" };
+        account = allAccounts[0];
+        console.log("account not found!", allAccounts);
+        // return { msg: "account not found!" };
+        return {
+          signU8A: null,
+        };
       }
       const injector = await web3FromSource(account.meta.source);
       const signRaw = injector?.signer?.signRaw;
-      let signatureU8a = "";
-      if (signRaw) {
-        // after making sure that signRaw is defined
-        // we can use it to sign our message
-        const { signature } = await signRaw({
-          address: account.address,
-          data: stringToHex(msg),
-          type: "bytes",
-        });
-        signatureU8a = hexToU8a(signature);
+      if (!signRaw) {
+        return {
+          signU8A: null,
+        };
       }
+      // after making sure that signRaw is defined
+      // we can use it to sign our message
+      const { signature } = await signRaw({
+        address: account.address,
+        data: stringToHex(msg),
+        type: "bytes",
+      });
+      // console.log({ signature });
+      let signU8A = hexToU8a(signature);
+
       return {
-        signU8A: signatureU8a,
+        signU8A,
       };
     } else {
+      // console.log("Is in node.");
       let kr = this.keyring;
       const pair = kr.createFromUri(mnemonic);
       kr.setSS58Format(11330);

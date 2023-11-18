@@ -11,7 +11,11 @@ const { hexToString } = require("@polkadot/util");
 module.exports = class File extends ControlBase {
   constructor(api, keyring, gatewayURL, isDebug = false) {
     super(api, keyring, isDebug);
+    if (!gatewayURL) {
+      gatewayURL = "http://deoss-pub-gateway.cess.cloud/";
+    }
     this.gatewayURL = gatewayURL;
+    // this.gatewayURL="http://172.16.2.191:8080/";
   }
 
   async queryFileListFull(accountId32) {
@@ -101,8 +105,14 @@ module.exports = class File extends ControlBase {
 
   async uploadFile(mnemonic, accountId32, filePath, bucketName) {
     try {
-      const message = "cess-js-sdk-" + new Date().valueOf();
+      console.log({ mnemonic });
+      const message = "<Bytes>cess-js-sdk-" + new Date().valueOf()+"</Bytes>";
       const { signU8A } = await this.authSign(mnemonic, message);
+      if (!signU8A) {
+        return {
+          msg: "sign error",
+        };
+      }
       const sign = bs58.encode(signU8A);
 
       if (!sign) {
@@ -118,7 +128,6 @@ module.exports = class File extends ControlBase {
         Message: message,
         Signature: sign,
       };
-
       const ret = await fileHelper.upload(this.gatewayURL, filePath, headers, this.log);
       return ret;
     } catch (e) {
