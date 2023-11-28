@@ -187,6 +187,7 @@ module.exports = class ControlBase {
         // return { msg: "account not found!" };
         return {
           signU8A: null,
+          signStr:null
         };
       }
       const injector = await web3FromSource(account.meta.source);
@@ -194,6 +195,7 @@ module.exports = class ControlBase {
       if (!signRaw) {
         return {
           signU8A: null,
+          signStr:null
         };
       }
       // after making sure that signRaw is defined
@@ -208,6 +210,7 @@ module.exports = class ControlBase {
 
       return {
         signU8A,
+        signStr:signature
       };
     } else {
       // console.log("Is in node.");
