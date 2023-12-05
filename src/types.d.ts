@@ -139,7 +139,7 @@ declare namespace CESS {
     deleteFile(
       mnemonic: string,
       accountId32: string,
-      fileHashArray: string[],
+      fileHash: string,
       subState?: (status: any) => void,
     ): Promise<any>;
   }

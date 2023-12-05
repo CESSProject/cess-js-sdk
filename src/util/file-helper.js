@@ -11,6 +11,7 @@ const isBrower = typeof window != "undefined" && typeof window.document != "unde
 
 async function download(url, savePath, log) {
   let result = "";
+  console.log({ isBrower });
   if (isBrower) {
     result = await downloadForBrower(url, savePath, log);
   } else {
@@ -19,41 +20,22 @@ async function download(url, savePath, log) {
   return result;
 }
 function downloadForBrower(url, savePath, log) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       log("Connecting …", url);
-      if (!fs) {
-        fs = require("fs");
-      }
-      axios
-        .get(url, {
-          headers: {
-            Operation: "download",
-          },
-          responseType: "arraybuffer",
-          onDownloadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            log(`Completed：${percentCompleted}%`);
-            if (percentCompleted >= 100) {
-              resolve({ msg: "ok", data: savePath });
-            }
-          },
-        })
-        .then((response) => {
-          // response.data.pipe(fs.createWriteStream(savePath));
-          let arrayBuffer = response.data;
-          let totalLength = arrayBuffer.byteLength;
-          const result = new Uint8Array(totalLength);
-          result.set(new Uint8Array(arrayBuffer), 0);
-          savePath = savePath.split("\\").join("/");
-          let fileName = savePath.split("/").slice(-1);
-          fileName = fileName[0];
-          saveFile(result, fileName);
-        })
-        .catch((error) => {
-          console.error("Download fail：", error);
-          reject(error);
-        });
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Operation: "download",
+        },
+        responseType: "blob",
+      });
+      let resData =await response.blob();
+      savePath = savePath.split("\\").join("/");
+      let fileName = savePath.split("/").slice(-1);
+      fileName = fileName[0];
+      saveFile(resData, fileName);
+      resolve({ msg: "ok", data: savePath });
     } catch (e) {
       log(e);
       reject(e.message);
@@ -178,6 +160,9 @@ function saveFile(blob, name) {
   // if (!(blob instanceof Blob)) {
   //   blob = arrayBufferToBlob(blob);
   // }
+  if(!blob){
+    return console.log('blob is null');
+  }
   let a = document.createElement("a");
   a.href = window.URL.createObjectURL(blob);
   a.download = name;
