@@ -27,10 +27,11 @@ function downloadForBrower(url, savePath, log) {
         method: "GET",
         headers: {
           Operation: "download",
+          Account: "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe",
         },
         responseType: "blob",
       });
-      let resData =await response.blob();
+      let resData = await response.blob();
       savePath = savePath.split("\\").join("/");
       let fileName = savePath.split("/").slice(-1);
       fileName = fileName[0];
@@ -53,6 +54,7 @@ function downloadForNodejs(url, savePath, log) {
         .get(url, {
           headers: {
             Operation: "download",
+            Account: "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe",
           },
           responseType: "stream",
           onDownloadProgress: (progressEvent) => {
@@ -76,17 +78,17 @@ function downloadForNodejs(url, savePath, log) {
     }
   });
 }
-async function upload(url, filePath, header, log) {
+async function upload(url, filePath, header, log, progressCb) {
   let result = "";
   console.log({ isBrower });
   if (isBrower) {
-    result = await uploadForBrower(url, filePath, header, log);
+    result = await uploadForBrower(url, filePath, header, log, progressCb);
   } else {
-    result = await uploadForNodejs(url, filePath, header, log);
+    result = await uploadForNodejs(url, filePath, header, log, progressCb);
   }
   return result;
 }
-async function uploadForBrower(url, file, header, log) {
+async function uploadForBrower(url, file, header, log, progressCb) {
   return new Promise((resolve, reject) => {
     try {
       const formData = new FormData();
@@ -110,6 +112,14 @@ async function uploadForBrower(url, file, header, log) {
       xhr.onerror = function () {
         reject(Error("Network Error"));
       };
+      if (progressCb && typeof progressCb == "function") {
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) {
+            var percentComplete = Math.ceil((e.loaded / e.total) * 100);
+            progressCb(percentComplete);
+          }
+        };
+      }
       xhr.send(formData);
     } catch (e) {
       log(e);
@@ -117,7 +127,7 @@ async function uploadForBrower(url, file, header, log) {
     }
   });
 }
-async function uploadForNodejs(url, filePath, header, log) {
+async function uploadForNodejs(url, filePath, header, log, progressCb) {
   return new Promise((resolve, reject) => {
     try {
       if (!FormDataNode) {
@@ -140,6 +150,9 @@ async function uploadForNodejs(url, filePath, header, log) {
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             log(`Completed：${percentCompleted}%`);
+            if (progressCb && typeof progressCb == "function") {
+              progressCb(percentCompleted);
+            }
           },
         })
         .then((res) => {
@@ -160,8 +173,8 @@ function saveFile(blob, name) {
   // if (!(blob instanceof Blob)) {
   //   blob = arrayBufferToBlob(blob);
   // }
-  if(!blob){
-    return console.log('blob is null');
+  if (!blob) {
+    return console.log("blob is null");
   }
   let a = document.createElement("a");
   a.href = window.URL.createObjectURL(blob);

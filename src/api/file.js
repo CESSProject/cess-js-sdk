@@ -12,7 +12,7 @@ module.exports = class File extends ControlBase {
   constructor(api, keyring, gatewayURL, isDebug = false) {
     super(api, keyring, isDebug);
     if (!gatewayURL) {
-      gatewayURL = "http://deoss-pub-gateway.cess.cloud/";
+      gatewayURL = "https://deoss-pub-gateway.cess.cloud/";
     }
     this.gatewayURL = gatewayURL;
     // this.gatewayURL="http://172.16.2.191:8080/";
@@ -103,10 +103,10 @@ module.exports = class File extends ControlBase {
     }
   }
 
-  async uploadFile(mnemonic, accountId32, filePath, bucketName) {
+  async uploadFile(mnemonic, accountId32, fileObjOrPath, bucketName, progressCb) {
     try {
       console.log({ mnemonic });
-      const message = "<Bytes>cess-js-sdk-" + new Date().valueOf()+"</Bytes>";
+      const message = "<Bytes>cess-js-sdk-" + new Date().valueOf() + "</Bytes>";
       const { signU8A } = await this.authSign(mnemonic, message);
       if (!signU8A) {
         return {
@@ -128,7 +128,13 @@ module.exports = class File extends ControlBase {
         Message: message,
         Signature: sign,
       };
-      const ret = await fileHelper.upload(this.gatewayURL, filePath, headers, this.log);
+      const ret = await fileHelper.upload(
+        this.gatewayURL,
+        fileObjOrPath,
+        headers,
+        this.log,
+        progressCb,
+      );
       return ret;
     } catch (e) {
       console.log(e);
