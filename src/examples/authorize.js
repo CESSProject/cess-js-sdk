@@ -24,9 +24,9 @@ async function main() {
   result = await oss.authorityList(addr);
   console.log(getDataIfOk(result), "\n");
 
-  console.log("cancelAuthorize:");
-  result = await oss.cancelAuthorize(mnemonic, gatewayAddr);
-  console.log(getDataIfOk(result), "\n");
+  // console.log("cancelAuthorize:");
+  // result = await oss.cancelAuthorize(mnemonic, gatewayAddr);
+  // console.log(getDataIfOk(result), "\n");
 
   console.log("query authorityList:");
   result = await oss.authorityList(addr);

@@ -25,8 +25,8 @@ async function queryFileMetadata(oss, fileHash) {
 }
 
 async function uploadFile(oss, accountId32, mnemonic, bucketName) {
-  console.log("uploadFile:");
-  const result = await oss.uploadFile(mnemonic, accountId32, LICENSE_PATH, bucketName);
+  console.log("uploadFile:",LICENSE_PATH);
+  const result = await oss.uploadFile(mnemonic, accountId32, LICENSE_PATH, bucketName,console.log);
   console.log(getDataIfOk(result), "\n");
   return result;
 }
@@ -49,7 +49,7 @@ async function main() {
   const oss = new File(api, keyring, testnetConfig.gatewayURL, true);
 
   let tmpFileHash="0414617e35db30b114360d6ade6f6a980784c5c6052f6d8a8cae90b342d9ccb6";
-  await downloadFile(oss, tmpFileHash);
+  // await downloadFile(oss, tmpFileHash);
 
   // let result = await queryFileList(oss, addr);
   // if (result.msg != "ok") {
@@ -63,7 +63,8 @@ async function main() {
   //   await downloadFile(oss, tmpFileHash);
   //   await deleteFile(oss, addr, mnemonic, tmpFileHash);
   // }
-  // await uploadFile(oss, addr, mnemonic, bucketName);
+  let bucketName='test';
+  await uploadFile(oss, addr, mnemonic, bucketName);
 }
 
 main()
