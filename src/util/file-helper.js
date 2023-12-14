@@ -113,10 +113,30 @@ async function uploadForBrower(url, file, header, log, progressCb) {
         reject(Error("Network Error"));
       };
       if (progressCb && typeof progressCb == "function") {
+        let stime = new Date().getTime();
+        let sloaded = 0;
         xhr.upload.onprogress = function (e) {
           if (e.lengthComputable) {
-            var percentComplete = Math.ceil((e.loaded / e.total) * 100);
-            progressCb(percentComplete);
+            let percentComplete = Math.ceil((e.loaded / e.total) * 100);
+            let endTime = new Date().getTime();
+            let dTime = (endTime - stime) / 1000;
+            let dloaded = e.loaded - sloaded;
+            let speed = dloaded / dTime;
+            speed = speed / 1024;
+            stime = new Date().getTime();
+            sloaded = e.loaded;
+            let speedUnit = "KB/s";
+            if (speed > 1024) {
+              speed = speed / 1024;
+              speedUnit = "MB/s";
+            }
+            speed = speed.toFixed(1);
+            progressCb({
+              percentComplete,
+              speed,
+              speedUnit,
+              xhr,
+            });
           }
         };
       }
@@ -144,14 +164,35 @@ async function uploadForNodejs(url, filePath, header, log, progressCb) {
         headers[k] = header[k];
       });
       log("Connecting …", url);
+      let stime = new Date().getTime();
+      let sloaded = 0;
+      const controller = new AbortController();
       axios
         .put(url, formData, {
+          signal: controller.signal,
           headers,
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            log(`Completed：${percentCompleted}%`);
+          onUploadProgress: (e) => {
             if (progressCb && typeof progressCb == "function") {
-              progressCb(percentCompleted);
+              let percentComplete = Math.ceil((e.loaded / e.total) * 100);
+              let endTime = new Date().getTime();
+              let dTime = (endTime - stime) / 1000;
+              let dloaded = e.loaded - sloaded;
+              let speed = dloaded / dTime;
+              speed = speed / 1024;
+              stime = new Date().getTime();
+              sloaded = e.loaded;
+              let speedUnit = "KB/s";
+              if (speed > 1024) {
+                speed = speed / 1024;
+                speedUnit = "MB/s";
+              }
+              speed = speed.toFixed(1);
+              progressCb({
+                percentComplete,
+                speed,
+                speedUnit,
+                controller,
+              });
             }
           },
         })
