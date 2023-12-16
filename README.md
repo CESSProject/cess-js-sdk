@@ -22,50 +22,60 @@ pnpm add cess-js-sdk
 ## Example
 
 ```ts
+const { Space, InitAPI, Common, testnetConfig, wellKnownAcct } = require("cess-js-sdk");
+
 async function main() {
-  const { api, keyring } = await InitAPI(testnetConfig);
-  console.log("API initialized");
+	const { api, keyring } = await InitAPI(testnetConfig);
+	const { addr, mnemonic } = wellKnownAcct;
 
-  const [chain, nodeName, nodeVersion] = await Promise.all([
-    api.rpc.system.chain(),
-    api.rpc.system.name(),
-    api.rpc.system.version(),
-  ]);
-  console.log(`Connected to chain ${chain} using ${nodeName} v${nodeVersion}`);
+	const space = new Space(api, keyring);
+  /*
+    const bucket = new Bucket(api, keyring, true);
+    const space2 = new Space2(api, keyring, true);
+    const authorizeHandle = new Authorize(api, keyring, true);
+    const fileHandle = new File(
+      api,
+      keyring,
+      config.gatewayURL,
+      true
+    );
+  */
+	const common = new Common(api, keyring);
 
-  const space = new Space(api, keyring);
-  const common = new Common(api, keyring);
+	console.log("query userOwnedSpace:");
+	let result = await space.userOwnedSpace(addr);
+	const blockHeight = await common.queryBlockHeight();
 
-  const balanceEncoded = await api.query.system.account(acctId);
-  const { data } = balanceEncoded.toJSON() as { data: any };
-  console.log(`User: ${acctId}, balance:`, BigInt(data.free));
+	result = common.formatSpaceInfo(result.data, blockHeight);
+	console.log(result);
 
-  const initSpace = await space.userOwnedSpace(acctId);
-  console.log("query userOwnedSpace:", initSpace);
+	function getDataIfOk(result) {
+		return result.msg === "ok" ? result.data : result;
+	}
 
-  const blockHeight = await common.queryBlockHeight();
-  console.log("current block height:", blockHeight);
+	if (result.totalSpace) {
+		console.log("expansionSpace:");
+		result = await space.expansionSpace(mnemonic, 1);
+		console.log(getDataIfOk(result), "\n");
 
-  let spaceData = common.formatSpaceInfo(initSpace.data, blockHeight);
-  console.log("initial user space:", spaceData);
+		console.log("renewalSpace:");
+		result = await space.renewalSpace(mnemonic, 1);
+		console.log(getDataIfOk(result), "\n");
+	} else {
+		console.log("buySpace:");
+		result = await space.buySpace(mnemonic, 1);
+		console.log(getDataIfOk(result), "\n");
+	}
 
-  if (initSpaceData.totalSpace) {
-    console.log("expansionSpace:", await space.expansionSpace(mnemonic, RENT_SPACE));
-    console.log("renewalSpace:", await space.renewalSpace(mnemonic, RENEWAL_LEN));
-  } else {
-    console.log("buySpace:", await space.buySpace(mnemonic, RENT_SPACE));
-  }
-
-  const afterSpace = await space.userOwnedSpace(acctId);
-
-  const afterSpace = await space.userOwnedSpace(acctId);
-  spaceData = common.formatSpaceInfo(afterSpace.data, blockHeight);
-  console.log("user space afterwards:", spaceData);
+	console.log("query userOwnedSpace:");
+	result = await space.userOwnedSpace(addr);
+	result = common.formatSpaceInfo(result.data, blockHeight);
+	console.log(result);
 }
 
 main()
-  .catch(console.error)
-  .finally(() => process.exit());
+	.catch(console.error)
+	.finally(() => process.exit());
 ```
 
 More examples are in the [**examples**](./examples) directory.
