@@ -26,7 +26,7 @@ const { Space, InitAPI, Common, testnetConfig, wellKnownAcct } = require("cess-j
 
 async function main() {
 	const { api, keyring } = await InitAPI(testnetConfig);
-	const { addr, mnemonic } = wellKnownAcct;
+	const { addr, mnemonicOrAccountId32 } = wellKnownAcct;
 
 	const space = new Space(api, keyring);
   /*
@@ -55,15 +55,15 @@ async function main() {
 
 	if (result.totalSpace) {
 		console.log("expansionSpace:");
-		result = await space.expansionSpace(mnemonic, 1);
+		result = await space.expansionSpace(mnemonicOrAccountId32, 1);
 		console.log(getDataIfOk(result), "\n");
 
 		console.log("renewalSpace:");
-		result = await space.renewalSpace(mnemonic, 1);
+		result = await space.renewalSpace(mnemonicOrAccountId32, 1);
 		console.log(getDataIfOk(result), "\n");
 	} else {
 		console.log("buySpace:");
-		result = await space.buySpace(mnemonic, 1);
+		result = await space.buySpace(mnemonicOrAccountId32, 1);
 		console.log(getDataIfOk(result), "\n");
 	}
 
@@ -86,7 +86,7 @@ To run them all, run the command:
 pnpm examples
 ```
 
-All examples connect to the Testnet and use the account `cXgaee2N8E77JJv9gdsGAckv1Qsf3hqWYf7NL4q6ZuQzuAUtB` as default with the following mnemonic:
+All examples connect to the Testnet and use the account `cXgaee2N8E77JJv9gdsGAckv1Qsf3hqWYf7NL4q6ZuQzuAUtB` as default with the following mnemonicOrAccountId32:
 
 ```
 bottom drive obey lake curtain smoke basket hold race lonely fit walk
@@ -144,29 +144,29 @@ function buildConfig(nodeURL, gatewayURL, keyringOption) {
 ### Space
 
 - `userOwnedSpace(accountId32: string): Promise<APIReturnedData>`
-- `buySpace(mnemonic: string, gibCount: number): Promise<any>`
-- `expansionSpace(mnemonicOrAccountId32: string, gibCount: number): Promise<any>`
-- `renewalSpace(mnemonic: string, days: number): Promise<any>`
+- `buySpace(mnemonicOrAccountId32: string, gibCount: number): Promise<any>`
+- `expansionSpace(mnemonicOrAccountId32OrAccountId32: string, gibCount: number): Promise<any>`
+- `renewalSpace(mnemonicOrAccountId32: string, days: number): Promise<any>`
 
 ### Authorize
 
 - `authorityList(accountId32: string): Promise<APIReturnedData>`
-- `authorize(mnemonic: string, operator: string): Promise<any>`
-- `cancelAuthorize(mnemonic: string, operator: string): Promise<any>`
+- `authorize(mnemonicOrAccountId32: string, operator: string): Promise<any>`
+- `cancelAuthorize(mnemonicOrAccountId32: string, operator: string): Promise<any>`
 
 ### Bucket
 
 - `queryBucketNames(accountId32: string): Promise<APIReturnedData>`
 - `queryBucketList(accountId32: string): Promise<APIReturnedData>`
 - `queryBucketInfo(accountId32: string, name: string): Promise<APIReturnedData>`
-- `createBucket(mnemonic: string, accountId32: string, name: string): Promise<any>`
-- `deleteBucket(mnemonic: string, accountId32: string, name: string): Promise<any>`
+- `createBucket(mnemonicOrAccountId32: string, accountId32: string, name: string): Promise<any>`
+- `deleteBucket(mnemonicOrAccountId32: string, accountId32: string, name: string): Promise<any>`
 
 ### File
 
 - `queryFileListFull(accountId32: string): Promise<APIReturnedData>`
 - `queryFileList(accountId32: string): Promise<APIReturnedData>`
 - `queryFileMetadata(fileHash: string): Promise<APIReturnedData>`
-- `uploadFile(mnemonic: string, accountId32: string, filePath: string, bucketName: string): Promise<any>`
+- `uploadFile(mnemonicOrAccountId32: string, accountId32: string, filePath: string, bucketName: string): Promise<any>`
 - `downloadFile(fileHash: string, savePath: string): Promise<any>`
-- `deleteFile(mnemonic: string, accountId32: string, fileHashArray: string[]): Promise<any>`
+- `deleteFile(mnemonicOrAccountId32: string, accountId32: string, fileHashArray: string[]): Promise<any>`

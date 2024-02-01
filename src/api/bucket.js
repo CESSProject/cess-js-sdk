@@ -72,15 +72,15 @@ module.exports = class Bucket extends ControlBase {
     }
   }
 
-  async createBucket(mnemonic, accountId32, name, subState = null) {
+  async createBucket(mnemonicOrAccountId32, accountId32, name, subState = null) {
     await this.api.isReady;
     const extrinsic = this.api.tx.fileBank.createBucket(accountId32, name);
-    return await this.signAndSend(mnemonic, extrinsic, subState);
+    return await this.signAndSend(mnemonicOrAccountId32, extrinsic, subState);
   }
 
-  async deleteBucket(mnemonic, accountId32, name, subState = null) {
+  async deleteBucket(mnemonicOrAccountId32, accountId32, name, subState = null) {
     await this.api.isReady;
     const extrinsic = this.api.tx.fileBank.deleteBucket(accountId32, name);
-    return await this.signAndSend(mnemonic, extrinsic, subState);
+    return await this.signAndSend(mnemonicOrAccountId32, extrinsic, subState);
   }
 };

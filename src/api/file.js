@@ -103,11 +103,11 @@ module.exports = class File extends ControlBase {
     }
   }
 
-  async uploadFile(mnemonic, accountId32, fileObjOrPath, bucketName, progressCb) {
+  async uploadFile(mnemonicOrAccountId32, accountId32, fileObjOrPath, bucketName, progressCb) {
     try {
-      console.log({ mnemonic });
+      console.log({ mnemonicOrAccountId32 });
       const message = "<Bytes>cess-js-sdk-" + new Date().valueOf() + "</Bytes>";
-      const { signU8A } = await this.authSign(mnemonic, message);
+      const { signU8A } = await this.authSign(mnemonicOrAccountId32, message);
       if (!signU8A) {
         return {
           msg: "sign error",
@@ -148,8 +148,8 @@ module.exports = class File extends ControlBase {
     return ret;
   }
 
-  async deleteFile(mnemonic, accountId32, fileHash, subState = null) {
+  async deleteFile(mnemonicOrAccountId32, accountId32, fileHash, subState = null) {
     const extrinsic = this.api.tx.fileBank.deleteFile(accountId32, fileHash);
-    return await this.signAndSend(mnemonic, extrinsic, subState);
+    return await this.signAndSend(mnemonicOrAccountId32, extrinsic, subState);
   }
 };

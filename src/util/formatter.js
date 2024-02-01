@@ -62,7 +62,7 @@ function formatBalance(balance) {
   if (isNaN(balance)) {
     return balance;
   }
-  return fixed(balance / 1000000000000);
+  return fixed(parseInt(balance) / 1e18);
 }
 function formatAddress(addr) {
   if (!addr) return "";
