@@ -45,11 +45,11 @@ function downloadForBrower(url, savePath, log) {
 }
 function downloadForNodejs(url, savePath, log) {
   return new Promise((resolve, reject) => {
+    if(!fs){
+      fs=require("fs");
+    }
     try {
       log("Connecting …", url);
-      if (!fs) {
-        fs = require("fs");
-      }
       axios
         .get(url, {
           headers: {
@@ -60,13 +60,15 @@ function downloadForNodejs(url, savePath, log) {
           onDownloadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             log(`Completed：${percentCompleted}%`);
-            if (percentCompleted >= 100) {
-              resolve({ msg: "ok", data: savePath });
-            }
           },
         })
         .then((response) => {
-          response.data.pipe(fs.createWriteStream(savePath));
+          // console.log(response.data.toString());
+          let out = fs.createWriteStream(savePath);
+          out.on("finish", function () {
+            resolve({ msg: "ok", data: savePath });
+          });
+          response.data.pipe(out);
         })
         .catch((error) => {
           console.error("Download fail：", error);

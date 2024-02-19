@@ -51,19 +51,19 @@ async function main() {
   let tmpFileHash="0414617e35db30b114360d6ade6f6a980784c5c6052f6d8a8cae90b342d9ccb6";
   // await downloadFile(oss, tmpFileHash);
 
-  // let result = await queryFileList(oss, addr);
-  // if (result.msg != "ok") {
-  //   return;
-  // }
-  // let bucketName = BUCKET_NAME;
-  // if (result.data?.length) {
-  //   let tmpFileHash = result.data[0].fileHash;
-  //   await queryFileMetadata(oss, tmpFileHash);
-  //   bucketName = result.data[0].bucketName;
-  //   await downloadFile(oss, tmpFileHash);
-  //   await deleteFile(oss, addr, mnemonic, tmpFileHash);
-  // }
-  let bucketName='test';
+  let result = await queryFileList(oss, addr);
+  if (result.msg != "ok") {
+    return;
+  }
+  let bucketName = BUCKET_NAME;
+  if (result.data?.length) {
+    let tmpFileHash = result.data[0].fileHash;
+    await queryFileMetadata(oss, tmpFileHash);
+    bucketName = result.data[0].bucketName;
+    await downloadFile(oss, tmpFileHash);
+    // await deleteFile(oss, addr, mnemonic, tmpFileHash);
+  }
+  bucketName='test';
   await uploadFile(oss, addr, mnemonic, bucketName);
 }
 

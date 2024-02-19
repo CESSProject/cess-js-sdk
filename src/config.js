@@ -4,7 +4,7 @@
  */
 
 const testnetConfig = {
-  nodeURL: "wss://testnet-rpc0.cess.cloud/ws/",
+  nodeURL: "wss://testnet-rpc1.cess.cloud/ws/",
   keyringOption: { type: "sr25519", ss58Format: 42 },
   gatewayURL: "http://deoss-pub-gateway.cess.cloud/",
 };
