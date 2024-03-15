@@ -5,10 +5,7 @@ import { Space, InitAPI, Common, testnetConfig, wellKnownAcct } from "../../";
 
 // Substrate well-known mnemonic. Don't use them in production:
 //  https://github.com/substrate-developer-hub/substrate-developer-hub.github.io/issues/613
-const { mnemonic, addr: acctId } = wellKnownAcct;
-
-const RENT_SPACE = 1; // unit in GB.
-const RENEWAL_LEN = 1; // unit in day.
+const { addr: acctId } = wellKnownAcct;
 
 async function main() {
   const { api, keyring } = await InitAPI(testnetConfig);
@@ -34,22 +31,8 @@ async function main() {
   const blockHeight = await common.queryBlockHeight();
   console.log("current block height:", blockHeight);
 
-  let spaceData = common.formatSpaceInfo(initSpace.data, blockHeight);
-  console.log("initial user space:", spaceData);
-
-  if (process.env.CI === "true") return;
-
-  // The following code writes to CESS blockchain. Run only when not in CI (github action) mode.
-  if (spaceData.totalSpace) {
-    console.log("expansionSpace:", await space.expansionSpace(mnemonic, RENT_SPACE));
-    console.log("renewalSpace:", await space.renewalSpace(mnemonic, RENEWAL_LEN));
-  } else {
-    console.log("buySpace:", await space.buySpace(mnemonic, RENT_SPACE));
-  }
-
-  const afterSpace = await space.userOwnedSpace(acctId);
-  spaceData = common.formatSpaceInfo(afterSpace.data, blockHeight);
-  console.log("user space afterwards:", spaceData);
+  const spaceData = common.formatSpaceInfo(initSpace.data, blockHeight);
+  console.log("user space:", spaceData);
 }
 
 main()

@@ -4,67 +4,123 @@
  */
 const { join: joinPath, resolve: resolvePath } = require("node:path");
 
-const { File, InitAPI, testnetConfig } = require("../../");
+const { Authorize, Bucket, Space, Common, File, InitAPI, testnetConfig } = require("../../");
 const { wellKnownAcct } = require("../config");
 const { getDataIfOk } = require("../util");
 
-const LICENSE_PATH = resolvePath(joinPath(__dirname, "../../LICENSE"));
-const BUCKET_NAME = "test";
+const sampleUploadPath = resolvePath(joinPath(__dirname, "../../LICENSE"));
+const tmpDownloadPath = resolvePath("./tmp.txt");
+const bucketName = "test";
 
-async function queryFileList(oss, accountId32) {
-  console.log("queryFileList:");
-  let result = await oss.queryFileListFull(accountId32);
-  console.log(getDataIfOk(result), "\n");
-  return result;
-}
+const { mnemonicOrAccountId32: mnemonic, addr } = wellKnownAcct;
+const { gateway } = testnetConfig;
 
-async function queryFileMetadata(oss, fileHash) {
-  console.log("queryFileMetadata:");
-  const result = await oss.queryFileMetadata(fileHash);
-  console.log(getDataIfOk(result), "\n");
-}
+// Performing setup / tear down function before user is uploading/downloading file
+async function setupTeardown(api, keyring, func) {
+  const authService = new Authorize(api, keyring);
+  const space = new Space(api, keyring);
+  const common = new Common(api, keyring);
+  const bucketService = new Bucket(api, keyring);
 
-async function uploadFile(oss, accountId32, mnemonic, bucketName) {
-  console.log("uploadFile:",LICENSE_PATH);
-  const result = await oss.uploadFile(mnemonic, accountId32, LICENSE_PATH, bucketName,console.log);
-  console.log(getDataIfOk(result), "\n");
-  return result;
-}
+  // Authorize the user account for DeOSS
+  try {
+    process.stdout.write("Running authorize()...");
+    let result = await authService.authorize(mnemonic, gateway.addr);
+    console.log(getDataIfOk(result));
 
-async function downloadFile(oss, fileHash) {
-  console.log("downloadFile:");
-  const result = await oss.downloadFile(fileHash, "./tmp.txt");
-  console.log(result.msg === "ok" ? result.data : result);
-}
+    // Ensure the user has some space, if not, we buy/expand the user storage
+    result = await space.userOwnedSpace(addr);
+    let blockHeight = await common.queryBlockHeight();
+    result = common.formatSpaceInfo(result.data, blockHeight);
+    console.log("User space info:", result);
 
-async function deleteFile(oss, accountId32, mnemonic, fileHash) {
-  console.log("deleteFile:");
-  const result = await oss.deleteFile(mnemonic, accountId32, [fileHash]);
-  console.log(result.msg === "ok" ? result.data : result);
+    if (!result.totalSpace) {
+      // User has no space, so the user has to use buySpace
+      process.stdout.write("Running buySpace()...");
+      result = await space.buySpace(mnemonic, 1);
+      console.log(getDataIfOk(result));
+    } else if (result.remainingSpace < 10000000) {
+      process.stdout.write("Running expansionSpace()...");
+      result = await space.expansionSpace(mnemonic, 1);
+      console.log(getDataIfOk(result));
+    }
+
+    // create the bucket bucketName if it doesn't exists
+    result = await bucketService.queryBucketList(addr);
+    const bucketList = getDataIfOk(result);
+    console.log("current bucket list:", bucketList);
+
+    if (!bucketList || !bucketList.some((bucket) => bucket.key === bucketName)) {
+      process.stdout.write(`Running createBucket(${bucketName})...`);
+      result = await bucketService.createBucket(mnemonic, addr, bucketName);
+      console.log(getDataIfOk(result));
+    }
+  } catch (err) {
+    console.error("Setup/Teardown failed:", err);
+    return;
+  }
+
+  await func.call();
+
+  process.stdout.write("Running cancelAuthorize()...");
+  let result = await authService.cancelAuthorize(mnemonic, gateway.addr);
+  console.log(getDataIfOk(result));
 }
 
 async function main() {
   const { api, keyring } = await InitAPI(testnetConfig);
-  const { mnemonic, addr } = wellKnownAcct;
-  const oss = new File(api, keyring, testnetConfig.gatewayURL, true);
 
-  let tmpFileHash="0414617e35db30b114360d6ade6f6a980784c5c6052f6d8a8cae90b342d9ccb6";
-  // await downloadFile(oss, tmpFileHash);
+  await setupTeardown(api, keyring, async () => {
+    const fileService = new File(api, keyring, gateway.url, true);
 
-  let result = await queryFileList(oss, addr);
-  if (result.msg != "ok") {
-    return;
-  }
-  let bucketName = BUCKET_NAME;
-  if (result.data?.length) {
-    let tmpFileHash = result.data[0].fileHash;
-    await queryFileMetadata(oss, tmpFileHash);
-    bucketName = result.data[0].bucketName;
-    await downloadFile(oss, tmpFileHash);
-    // await deleteFile(oss, addr, mnemonic, tmpFileHash);
-  }
-  bucketName='test';
-  await uploadFile(oss, addr, mnemonic, bucketName);
+    // Query user file
+    let result = await fileService.queryFileListFull(addr);
+    console.log("user file list (before upload):", getDataIfOk(result));
+
+    // Something wrong with the fileService, exit
+    if (result.msg !== "ok") {
+      console.error(result);
+      return;
+    }
+
+    // Upload the sampleUploadPath
+    process.stdout.write(`Uploading file ${sampleUploadPath} to bucket ${bucketName}...`);
+    try {
+      result = await fileService.uploadFile(mnemonic, addr, sampleUploadPath, bucketName);
+      console.log(getDataIfOk(result));
+    } catch (err) {
+      console.error("error: ", result);
+    }
+
+    // Record the file hash
+    const fileHash = result.data;
+
+    // Query the uploaded file metadata
+    console.log(`fileHash: ${fileHash}`);
+    result = await fileService.queryFileMetadata(fileHash);
+    const metadata = getDataIfOk(result);
+    console.log("Uploaded file metadata:", metadata);
+
+    // Download the uploaded file
+    process.stdout.write(`Downloading file with hash: ${fileHash}...`);
+    try {
+      result = await fileService.downloadFile(fileHash, tmpDownloadPath);
+      console.log(getDataIfOk(result));
+    } catch (err) {
+      console.error("error: ", result);
+    }
+
+    // Delete the uploaded file, only when the metadata is valid (the file is recognized on-chain)
+    if (metadata) {
+      process.stdout.write(`Deleting file with hash ${fileHash}...`);
+      try {
+        result = await fileService.deleteFile(mnemonic, addr, fileHash);
+        console.log(getDataIfOk(result));
+      } catch (err) {
+        console.error("error: ", result);
+      }
+    }
+  });
 }
 
 main()

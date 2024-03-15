@@ -7,90 +7,78 @@ let fs = null;
 let FormDataNode = null;
 const axios = require("axios");
 
-const isBrower = typeof window != "undefined" && typeof window.document != "undefined";
+const isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined";
 
 async function download(url, savePath, log) {
-  let result = "";
-  console.log({ isBrower });
-  if (isBrower) {
-    result = await downloadForBrower(url, savePath, log);
-  } else {
-    result = await downloadForNodejs(url, savePath, log);
-  }
+  const result = isBrowser
+    ? await downloadForBrowser(url, savePath, log)
+    : await downloadForNodejs(url, savePath, log);
+
   return result;
 }
-function downloadForBrower(url, savePath, log) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      log("Connecting …", url);
-      const response = await fetch(url, {
-        method: "GET",
+
+async function downloadForBrowser(url, savePath, log = undefined) {
+  if (log) log(`Browser: download from ${url} and save to ${savePath}`);
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Operation: "download",
+      Account: "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe",
+    },
+    responseType: "blob",
+  });
+
+  let resData = await response.blob();
+
+  savePath = savePath.split("\\").join("/");
+  let fileName = savePath.split("/").slice(-1);
+  fileName = fileName[0];
+
+  saveFile(resData, fileName);
+  return { msg: "ok", data: savePath };
+}
+
+function downloadForNodejs(url, savePath, log = undefined) {
+  if (!fs) fs = require("node:fs");
+  if (log) log(`Node: download from ${url} and save to ${savePath}`);
+
+  return new Promise((resolve, reject) => {
+    axios
+      .get(url, {
         headers: {
           Operation: "download",
           Account: "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe",
         },
-        responseType: "blob",
-      });
-      let resData = await response.blob();
-      savePath = savePath.split("\\").join("/");
-      let fileName = savePath.split("/").slice(-1);
-      fileName = fileName[0];
-      saveFile(resData, fileName);
-      resolve({ msg: "ok", data: savePath });
-    } catch (e) {
-      log(e);
-      reject(e.message);
-    }
-  });
-}
-function downloadForNodejs(url, savePath, log) {
-  return new Promise((resolve, reject) => {
-    if(!fs){
-      fs=require("fs");
-    }
-    try {
-      log("Connecting …", url);
-      axios
-        .get(url, {
-          headers: {
-            Operation: "download",
-            Account: "cXh5StobuVP4B7mGH9xn8dSsDtXks4qLAou8ZdkZ6DbB6zzxe",
-          },
-          responseType: "stream",
-          onDownloadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            log(`Completed：${percentCompleted}%`);
-          },
-        })
-        .then((response) => {
-          // console.log(response.data.toString());
-          let out = fs.createWriteStream(savePath);
-          out.on("finish", function () {
-            resolve({ msg: "ok", data: savePath });
-          });
-          response.data.pipe(out);
-        })
-        .catch((error) => {
-          console.error("Download fail：", error);
-          reject(error);
+        responseType: "stream",
+        onDownloadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          log(`Completed: ${percentCompleted}%`);
+        },
+      })
+      .then((response) => {
+        const outStream = fs.createWriteStream(savePath);
+        outStream.on("finish", () => {
+          resolve({ msg: "ok", data: savePath });
         });
-    } catch (e) {
-      log(e);
-      reject(e.message);
-    }
+        response.data.pipe(outStream);
+      })
+      .catch((err) => {
+        console.error(err);
+        reject(err);
+      });
   });
 }
+
 async function upload(url, filePath, header, log, progressCb) {
-  let result = "";
-  console.log({ isBrower });
-  if (isBrower) {
-    result = await uploadForBrower(url, filePath, header, log, progressCb);
-  } else {
-    result = await uploadForNodejs(url, filePath, header, log, progressCb);
-  }
+  const result = isBrowser
+    ? await uploadForBrowser(url, filePath, header, log, progressCb)
+    : await uploadForNodejs(url, filePath, header, log, progressCb);
+
   return result;
 }
-async function uploadForBrower(url, file, header, log, progressCb) {
+
+async function uploadForBrowser(url, file, header, log, progressCb) {
   return new Promise((resolve, reject) => {
     try {
       const formData = new FormData();
@@ -149,6 +137,7 @@ async function uploadForBrower(url, file, header, log, progressCb) {
     }
   });
 }
+
 async function uploadForNodejs(url, filePath, header, log, progressCb) {
   return new Promise((resolve, reject) => {
     try {
@@ -165,7 +154,7 @@ async function uploadForNodejs(url, filePath, header, log, progressCb) {
       Object.keys(header).forEach((k) => {
         headers[k] = header[k];
       });
-      log("Connecting …", url);
+
       let stime = new Date().getTime();
       let sloaded = 0;
       const controller = new AbortController();
@@ -202,7 +191,7 @@ async function uploadForNodejs(url, filePath, header, log, progressCb) {
           resolve({ msg: "ok", data: res.data });
         })
         .catch((error) => {
-          console.error("Upload fail：", error.message);
+          console.error("Upload fail:", error.message);
           reject(error.message);
         });
     } catch (e) {
@@ -211,14 +200,10 @@ async function uploadForNodejs(url, filePath, header, log, progressCb) {
     }
   });
 }
+
 function saveFile(blob, name) {
-  // note: commented the following because `arrayBufferToBlob()` is not a valid function.
-  // if (!(blob instanceof Blob)) {
-  //   blob = arrayBufferToBlob(blob);
-  // }
-  if (!blob) {
-    return console.log("blob is null");
-  }
+  if (!blob) throw new Error("Null blob");
+
   let a = document.createElement("a");
   a.href = window.URL.createObjectURL(blob);
   a.download = name;

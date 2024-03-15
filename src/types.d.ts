@@ -7,23 +7,28 @@ import { ApiPromise, Keyring } from "@polkadot/api";
 export as namespace CESS;
 export = CESS;
 
-interface APIReturnedData {
-  msg: string;
-  data?: any;
-  errMsg?: string;
-  error?: string;
-}
-
-interface KeyringOption {
-  type: string;
-  ss58Format: number;
-}
-
 declare namespace CESS {
+  interface APIReturnedData {
+    msg: string;
+    data?: any;
+    errMsg?: string;
+    error?: string;
+  }
+
+  interface KeyringOption {
+    type: string;
+    ss58Format: number;
+  }
+
+  interface DeOSSGateway {
+    url: string;
+    addr: string;
+  }
+
   interface CESSConfig {
     nodeURL: string;
-    gatewayURL: string;
     keyringOption: KeyringOption;
+    gateway: DeOSSGateway;
   }
 
   interface SpaceInfo {
@@ -85,19 +90,31 @@ declare namespace CESS {
   class Space extends ControlBase {
     constructor(api: ApiPromise, keyring: Keyring, isDebug?: boolean);
     userOwnedSpace(accountId32: string): Promise<APIReturnedData>;
-    buySpace(mnemonicOrAccountId32: string, gibCount: number, subState?: (status: any) => void): Promise<any>;
+    buySpace(
+      mnemonicOrAccountId32: string,
+      gibCount: number,
+      subState?: (status: any) => void,
+    ): Promise<any>;
     expansionSpace(
       mnemonicOrAccountId32OrAccountId32: string,
       gibCount: number,
       subState?: (status: any) => void,
     ): Promise<any>;
-    renewalSpace(mnemonicOrAccountId32: string, days: number, subState?: (status: any) => void): Promise<any>;
+    renewalSpace(
+      mnemonicOrAccountId32: string,
+      days: number,
+      subState?: (status: any) => void,
+    ): Promise<any>;
   }
 
   class Authorize extends ControlBase {
     constructor(api: ApiPromise, keyring: Keyring, isDebug?: boolean);
     authorityList(accountId32: string): Promise<APIReturnedData>;
-    authorize(mnemonicOrAccountId32: string, operator: string, subState?: (status: any) => void): Promise<any>;
+    authorize(
+      mnemonicOrAccountId32: string,
+      operator: string,
+      subState?: (status: any) => void,
+    ): Promise<any>;
     cancelAuthorize(
       mnemonicOrAccountId32: string,
       operator: string,
@@ -145,9 +162,9 @@ declare namespace CESS {
   }
 
   function buildConfig(
-    nodeURL: string,
-    gatewayURL: string,
+    nodeURL?: string,
     keyringOption?: KeyringOption,
+    gateway?: Gateway,
   ): CESSConfig;
 
   const testnetConfig: CESSConfig;
@@ -155,6 +172,5 @@ declare namespace CESS {
   const wellKnownAcct: {
     addr: string;
     mnemonicOrAccountId32: string;
-    gatewayAddr: string;
   };
 }

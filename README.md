@@ -25,10 +25,10 @@ pnpm add cess-js-sdk
 const { Space, InitAPI, Common, testnetConfig, wellKnownAcct } = require("cess-js-sdk");
 
 async function main() {
-	const { api, keyring } = await InitAPI(testnetConfig);
-	const { addr, mnemonicOrAccountId32 } = wellKnownAcct;
+  const { api, keyring } = await InitAPI(testnetConfig);
+  const { addr, mnemonicOrAccountId32 } = wellKnownAcct;
 
-	const space = new Space(api, keyring);
+  const space = new Space(api, keyring);
   /*
     const bucket = new Bucket(api, keyring, true);
     const space2 = new Space2(api, keyring, true);
@@ -40,42 +40,42 @@ async function main() {
       true
     );
   */
-	const common = new Common(api, keyring);
+  const common = new Common(api, keyring);
 
-	console.log("query userOwnedSpace:");
-	let result = await space.userOwnedSpace(addr);
-	const blockHeight = await common.queryBlockHeight();
+  console.log("query userOwnedSpace:");
+  let result = await space.userOwnedSpace(addr);
+  const blockHeight = await common.queryBlockHeight();
 
-	result = common.formatSpaceInfo(result.data, blockHeight);
-	console.log(result);
+  result = common.formatSpaceInfo(result.data, blockHeight);
+  console.log(result);
 
-	function getDataIfOk(result) {
-		return result.msg === "ok" ? result.data : result;
-	}
+  function getDataIfOk(result) {
+    return result.msg === "ok" ? result.data : result;
+  }
 
-	if (result.totalSpace) {
-		console.log("expansionSpace:");
-		result = await space.expansionSpace(mnemonicOrAccountId32, 1);
-		console.log(getDataIfOk(result), "\n");
+  if (result.totalSpace) {
+    console.log("expansionSpace:");
+    result = await space.expansionSpace(mnemonicOrAccountId32, 1);
+    console.log(getDataIfOk(result), "\n");
 
-		console.log("renewalSpace:");
-		result = await space.renewalSpace(mnemonicOrAccountId32, 1);
-		console.log(getDataIfOk(result), "\n");
-	} else {
-		console.log("buySpace:");
-		result = await space.buySpace(mnemonicOrAccountId32, 1);
-		console.log(getDataIfOk(result), "\n");
-	}
+    console.log("renewalSpace:");
+    result = await space.renewalSpace(mnemonicOrAccountId32, 1);
+    console.log(getDataIfOk(result), "\n");
+  } else {
+    console.log("buySpace:");
+    result = await space.buySpace(mnemonicOrAccountId32, 1);
+    console.log(getDataIfOk(result), "\n");
+  }
 
-	console.log("query userOwnedSpace:");
-	result = await space.userOwnedSpace(addr);
-	result = common.formatSpaceInfo(result.data, blockHeight);
-	console.log(result);
+  console.log("query userOwnedSpace:");
+  result = await space.userOwnedSpace(addr);
+  result = common.formatSpaceInfo(result.data, blockHeight);
+  console.log(result);
 }
 
 main()
-	.catch(console.error)
-	.finally(() => process.exit());
+  .catch(console.error)
+  .finally(() => process.exit());
 ```
 
 More examples are in the [**examples**](./examples) directory.

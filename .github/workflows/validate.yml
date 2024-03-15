@@ -26,4 +26,4 @@ jobs:
       - name: Validate
         run: |
           pnpm install
-          pnpm validate
+          pnpm validate:run

@@ -15,9 +15,10 @@
   "scripts": {
     "fmt": "prettier --write .",
     "lint": "eslint .",
-    "test:types": "ts-node src/tests/types.ts",
-    "examples": "ts-node src/examples/index.ts",
-    "validate": "npm run fmt && npm run lint && npm run test:types"
+    "test:types": "tsx src/tests/types.ts",
+    "examples": "tsx src/examples/index.ts",
+    "validate": "pnpm prettier -c . && pnpm lint",
+    "validate:run": "pnpm prettier -c . && pnpm lint && pnpm test:types"
   },
   "dependencies": {
     "@polkadot/api": "^10.9.1",
@@ -45,6 +46,7 @@
     "lint-staged": "^15.0.2",
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
+    "tsx": "^4.7.1",
     "typescript": "^5.2.2"
   },
   "keywords": [

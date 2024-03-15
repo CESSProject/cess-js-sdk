@@ -9,9 +9,9 @@ let web3FromAddress = () => {
 };
 let web3Accounts = () => {};
 let web3FromSource = () => {};
-const isBrower = typeof window != "undefined" && typeof window.document != "undefined";
+const isBrowser = typeof window != "undefined" && typeof window.document != "undefined";
 
-if (isBrower) {
+if (isBrowser) {
   console.log("init polkadot/extension-dapp");
   extension = require("@polkadot/extension-dapp");
   web3Enable = extension.web3Enable;
@@ -20,7 +20,7 @@ if (isBrower) {
   web3FromSource = extension.web3FromSource;
 }
 const util = require("../src/util/index");
-const { stringToHex, hexToU8a, u8aConcat, u8aToHex } = require("@polkadot/util");
+const { stringToHex, hexToU8a } = require("@polkadot/util");
 
 module.exports = class ControlBase {
   constructor(api, keyring, isDebug = false) {
@@ -170,8 +170,8 @@ module.exports = class ControlBase {
     });
   }
 
-  async authSign(mnemonic, msg) {    
-    if (isBrower) {
+  async authSign(mnemonic, msg) {
+    if (isBrowser) {
       // console.log("Is in brower.");
       await web3Enable("cess");
       const allAccounts = await web3Accounts();
@@ -187,7 +187,7 @@ module.exports = class ControlBase {
         // return { msg: "account not found!" };
         return {
           signU8A: null,
-          signStr:null
+          signStr: null,
         };
       }
       const injector = await web3FromSource(account.meta.source);
@@ -195,7 +195,7 @@ module.exports = class ControlBase {
       if (!signRaw) {
         return {
           signU8A: null,
-          signStr:null
+          signStr: null,
         };
       }
       // after making sure that signRaw is defined
@@ -210,7 +210,7 @@ module.exports = class ControlBase {
 
       return {
         signU8A,
-        signStr:signature
+        signStr: signature,
       };
     } else {
       // console.log("Is in node.");

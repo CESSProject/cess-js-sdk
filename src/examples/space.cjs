@@ -3,42 +3,74 @@
  * @Autor: cess lab
  */
 
-const { Space, InitAPI, Common } = require("../");
+const { Authorize, Space, InitAPI, Common } = require("../");
 const { testnetConfig, wellKnownAcct } = require("../config");
 const { getDataIfOk } = require("../util");
 
+const { mnemonicOrAccountId32: mnemonic, addr } = wellKnownAcct;
+const { gateway } = testnetConfig;
+
+async function setupTeardown(api, keyring, func) {
+  const authService = new Authorize(api, keyring);
+
+  // Authorize the user account for DeOSS
+  process.stdout.write("Running authorize()...");
+  let result = await authService.authorize(mnemonic, gateway.addr);
+  console.log(getDataIfOk(result));
+
+  await func.call();
+
+  process.stdout.write("Running cancelAuthorize()...");
+  result = await authService.cancelAuthorize(mnemonic, gateway.addr);
+  console.log(getDataIfOk(result));
+}
+
 async function main() {
   const { api, keyring } = await InitAPI(testnetConfig);
-  const { addr, mnemonic } = wellKnownAcct;
 
-  const space = new Space(api, keyring);
-  const common = new Common(api, keyring);
+  await setupTeardown(api, keyring, async () => {
+    const space = new Space(api, keyring);
+    const common = new Common(api, keyring);
 
-  console.log("query userOwnedSpace:");
-  let result = await space.userOwnedSpace(addr);
-  const blockHeight = await common.queryBlockHeight();
+    let result = await space.userOwnedSpace(addr);
+    let blockHeight = await common.queryBlockHeight();
+    result = common.formatSpaceInfo(result.data, blockHeight);
+    console.log("query user owned space (before buySpace/expanionSpace):", result);
 
-  result = common.formatSpaceInfo(result.data, blockHeight);
-  console.log(result);
+    if (result.totalSpace) {
+      if (result.totalSpaceGib < 5) {
+        // Only run this when the total space is within a reasonable limit.
+        process.stdout.write("Running expansionSpace()...");
+        try {
+          result = await space.expansionSpace(mnemonic, 1);
+          console.log(getDataIfOk(result));
+        } catch (err) {
+          console.error("error:", err);
+        }
+      }
 
-  if (result.totalSpace) {
-    console.log("expansionSpace:");
-    result = await space.expansionSpace(mnemonic, 1);
-    console.log(getDataIfOk(result), "\n");
+      process.stdout.write("Running renewalSpace()...");
+      try {
+        result = await space.renewalSpace(mnemonic, 1);
+        console.log(getDataIfOk(result));
+      } catch (err) {
+        console.error("error:", err);
+      }
+    } else {
+      process.stdout.write("Running buySpace()...");
+      try {
+        result = await space.buySpace(mnemonic, 1);
+        console.log(getDataIfOk(result));
+      } catch (err) {
+        console.error("error:", err);
+      }
+    }
 
-    console.log("renewalSpace:");
-    result = await space.renewalSpace(mnemonic, 1);
-    console.log(getDataIfOk(result), "\n");
-  } else {
-    console.log("buySpace:");
-    result = await space.buySpace(mnemonic, 1);
-    console.log(getDataIfOk(result), "\n");
-  }
-
-  console.log("query userOwnedSpace:");
-  result = await space.userOwnedSpace(addr);
-  result = common.formatSpaceInfo(result.data, blockHeight);
-  console.log(result);
+    result = await space.userOwnedSpace(addr);
+    blockHeight = await common.queryBlockHeight();
+    result = common.formatSpaceInfo(result.data, blockHeight);
+    console.log("query user owned space (after buySpace/expanionSpace):", result);
+  });
 }
 
 main()
